@@ -41,6 +41,7 @@ func main() {
 	}
 
 	writeJobs(jobs)
+	fmt.Println("Finished! Extracted", len(jobs), "jobs!")
 }
 
 func writeJobs(jobs []extractedJob) {
@@ -55,7 +56,7 @@ func writeJobs(jobs []extractedJob) {
 	checkErr(err)
 
 	for _, job := range jobs {
-		jobSlice := []string{job.id, job.title, job.location, job.salary, job.summary}
+		jobSlice := []string{"https://indeed.com/viewjob?jk=" + job.id, job.title, job.location, job.salary, job.summary}
 		err = w.Write(jobSlice)
 		checkErr(err)
 	}
