@@ -1,14 +1,21 @@
+GOBINDATA := $(shell command -v go-bindata 2> /dev/null)
 currentDir = $(shell pwd)
+releasesOutputDir = ${currentDir}/releases/$(date +'%F')
+
 
 ## installation
 install:
+ifndef GOBINDATA
+	@echo "==> installing go-bindata"
+	@go get -u github.com/go-bindata/go-bindata/...
+endif
 	@echo "==> installing go dependencies"
 	@go mod download
 .PHONY: install
 
 run:
 	@echo "==> running job scrapper"
-	@go run .
+	@${currentDir}/scripts/run.sh
 .PHONY: run
 
 buildwindows:
