@@ -6,30 +6,30 @@ jobs:
   keyword: q=Controls+Engineer
   location:
     - l=Boulder%2C+CO
-    - l=Missoula%2C+MT
-    - l=Columbus%2C+OH
-    - l=Carmel%2C+IN
-    - l=Olympia%2C+WA
-    - l=Bozeman%2C+ID
-    - l=Salt+Lake+City%2C+UT
-    - l=Port+Townsend%2C+WA
-    - l=Arlington%2C+TX
-    - l=Bentonville%2C+AR
-    - l=Eugene%2C+OR
-    - l=Burlington%2C+VT
+    # - l=Missoula%2C+MT
+    # - l=Columbus%2C+OH
+    # - l=Carmel%2C+IN
+    # - l=Olympia%2C+WA
+    # - l=Bozeman%2C+ID
+    # - l=Salt+Lake+City%2C+UT
+    # - l=Port+Townsend%2C+WA
+    # - l=Arlington%2C+TX
+    # - l=Bentonville%2C+AR
+    # - l=Eugene%2C+OR
+    # - l=Burlington%2C+VT
 
-- job:
-  keyword: q=golang
-  location:
-    - l=Boulder%2C+CO
-    - l=Missoula%2C+MT
-    - l=Columbus%2C+OH
-    - l=Carmel%2C+IN
-    - l=Olympia%2C+WA
-    - l=Bozeman%2C+ID
-    - l=Salt+Lake+City%2C+UT
-    - l=Port+Townsend%2C+WA
-    - l=Arlington%2C+TX
-    - l=Bentonville%2C+AR
-    - l=Eugene%2C+OR
-    - l=Burlington%2C+VT
+# - job:
+  # keyword: q=golang
+  # location:
+    # - l=Boulder%2C+CO
+    # - l=Missoula%2C+MT
+    # - l=Columbus%2C+OH
+    # - l=Carmel%2C+IN
+    # - l=Olympia%2C+WA
+    # - l=Bozeman%2C+ID
+    # - l=Salt+Lake+City%2C+UT
+    # - l=Port+Townsend%2C+WA
+    # - l=Arlington%2C+TX
+    # - l=Bentonville%2C+AR
+    # - l=Eugene%2C+OR
+    # - l=Burlington%2C+VT

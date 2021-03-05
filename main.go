@@ -168,20 +168,11 @@ func writeJobs(jobs []extractedJob) {
 }
 
 func genHTML(w http.ResponseWriter, r *http.Request) {
-	// fmt.Println(r.URL.Path[1:])
-	// http.ServeFile(w, r, "index.html")
-	// http.ServeFile(w, r, r.URL.Path[1:])
-	htmlVars := jobs
-	// fmt.Println(htmlVars)
-	fmt.Printf("Underlying Type: %T\n", htmlVars)
-	fmt.Printf("Underlying Value: %v\n", htmlVars)
+	// fmt.Printf("Underlying Type: %T\n", jobs)
+	// fmt.Printf("Underlying Value: %v\n", jobs)
 	t, err := template.ParseFiles("layout.html")
 	checkErr(err)
-	err = t.Execute(w, htmlVars)
+	err = t.Execute(w, jobs)
 	checkErr(err)
-	// for _, job := range jobs {
-	// 	job.id = "https://indeed.com/viewjob?jk=" + job.id
-	// 	err = t.Execute(w, job)
-	// }
 
 }
