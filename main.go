@@ -22,18 +22,21 @@ type extractedJob struct {
 	Salary   string
 	Summary  string
 	Date     string
+	FullDesc string
 }
 
 var (
-	config SearchConfig
-	jobs   []extractedJob
-	query  bool
+	config  SearchConfig
+	jobs    []extractedJob
+	query   bool
+	logfile *os.File
 )
 
 func main() {
 	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
 	flag.Parse()
 	if query == false {
+		fmt.Println("query here: ", query)
 		lines, err := ReadCsv("./site/jobs.csv")
 		checkErr(err)
 		// Loop through lines & turn into object
@@ -52,6 +55,13 @@ func main() {
 		os.Exit(0)
 	}
 
+	logfile, err := os.OpenFile("logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logfile)
+	defer logfile.Close()
+
 	GetConfig()
 	var urls []string
 	c := make(chan []extractedJob)
@@ -61,18 +71,22 @@ func main() {
 		keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
 		if len(job.Location) == 0 {
 			urls = append(urls, config.Baseurl+keyword+config.Baselimit)
+			fmt.Println(urls)
 		}
 		for _, location := range job.Location {
 			fmt.Println(location)
 			loc := strings.TrimSpace(location)
 			loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
 			urls = append(urls, config.Baseurl+keyword+"&"+loc+config.Baselimit)
+			fmt.Println(urls)
 		}
 	}
 
 	for _, url := range urls {
 		totalPages := getPages(url)
+		fmt.Println("total pagins", totalPages)
 		for i := 0; i < totalPages; i++ {
+			fmt.Println("we pagin")
 			go getPage(url, i, c)
 			// extractedJobs := getPage(i)
 			// jobs = append(jobs, extractedJobs...)
@@ -107,6 +121,7 @@ func cleanString(str string) string {
 }
 
 func getPages(url string) int {
+
 	pages := 0
 
 	res, err := http.Get(url)
@@ -120,6 +135,8 @@ func getPages(url string) int {
 	doc.Find(".pagination").Each(func(i int, s *goquery.Selection) {
 		pages = s.Find("a").Length()
 	})
+
+	fmt.Println("found some pagins", pages)
 
 	return pages
 }
@@ -156,19 +173,48 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 // channel send only type extractJob
 func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	id, _ := card.Attr("data-jk")
-	id = "https://indeed.com/viewjob?jk=" + id
+	id = "https://www.indeed.com/viewjob?jk=" + id
 	title := cleanString(card.Find(".title>a").Text())
 	location := cleanString(card.Find(".sjcl").Text())
 	salary := cleanString(card.Find(".salaryText").Text())
 	summary := cleanString(card.Find(".summary").Text())
 	date := cleanString(card.Find(".date").Text())
+
+	fullDescription := make(chan string)
+
+	go getFullDescription(id, fullDescription)
+
+	BigJob := <-fullDescription
+
 	c <- extractedJob{
 		Id:       id,
 		Title:    title,
 		Location: location,
 		Salary:   salary,
 		Summary:  summary,
-		Date:     date}
+		Date:     date,
+		FullDesc: BigJob,
+	}
+}
+
+func getFullDescription(url string, description chan<- string) {
+	// fmt.Println("Requesting", url)
+	res, err := http.Get(url)
+	checkErr(err)
+	checkCode(res)
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	// fmt.Println("DOC HERE: ", doc)
+	checkErr(err)
+
+	card := doc.Find(".jobsearch-JobDescriptionText")
+	fmt.Println("Card HERE: ", card)
+	fmt.Printf("%+v\n", card)
+
+	d := cleanString(doc.Find(".jobsearch-JobDescriptionText").Text())
+	fmt.Println("D HERE: ", d)
+	fmt.Printf("%+v\n", d)
+	description <- d
 }
 
 func RemoveDuplicates(jobs []extractedJob) {

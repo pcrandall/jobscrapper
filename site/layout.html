@@ -113,10 +113,20 @@
       $(document).ready(function () {
         $("#jobTable").on("click", "tr", function (e) {
           if (e.target.cellIndex === 4) {
-            console.log(e.target.cellIndex);
-            var val = $("td", this).eq(4).text(); //eq(2) increase the value inside eq() will display the txt column wise.
-            console.log(val);
+            let val = $("td", this).eq(4).text(); //eq(2) increase the value inside eq() will display the txt column wise.
+            let link =
+              e.currentTarget.children[1].firstElementChild.attributes.href
+                .nodeValue;
+                  link =  '<a href="' + link +  '">View Job</a>'
+            $('#jobButton').html(link);
             toggleModal(val);
+          } else {
+            if (e.currentTarget.children[1]) {
+              console.log(
+                e.currentTarget.children[1].firstElementChild.attributes.href
+                  .nodeValue
+              );
+            }
           }
 
           $("#jobModal").modal("show");
@@ -191,29 +201,17 @@
           <!--Body-->
           <p id="modal-content"></p>
           <!--Footer-->
-          <div class="flex justify-end pt-2" style="display: none;">
+          <div class="flex justify-center pt-2">
             <button
-              class="px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2"
+              class="px-4 bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-800 mr-2"
+              id="jobButton"
             >
-              Action
-            </button>
-            <button
-              class="modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400"
-            >
-              Close
             </button>
           </div>
         </div>
       </div>
     </div>
     <script>
-      var openmodal = document.querySelectorAll(".modal-open");
-      for (var i = 0; i < openmodal.length; i++) {
-        openmodal[i].addEventListener("click", function (event) {
-          event.preventDefault();
-          toggleModal();
-        });
-      }
       const overlay = document.querySelector(".modal-overlay");
       overlay.addEventListener("click", toggleModal);
 
@@ -221,6 +219,7 @@
       for (var i = 0; i < closemodal.length; i++) {
         closemodal[i].addEventListener("click", toggleModal);
       }
+
       document.onkeydown = function (evt) {
         evt = evt || window.event;
         var isEscape = false;
@@ -233,6 +232,7 @@
           toggleModal();
         }
       };
+
       function toggleModal(val) {
         const body = document.querySelector("body");
         const modal = document.querySelector(".modal");
