@@ -20,3 +20,9 @@ jobs:
 
 - job:
   keyword: golang
+
+- job:
+  keyword: full stack developer
+
+- job:
+  keyword: front-end developer

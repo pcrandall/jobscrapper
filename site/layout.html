@@ -3,33 +3,22 @@
   <head>
     <title>Job Search</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      href="/static/tailwind.min.css"
-      rel="stylesheet"
-    />
+    <link href="/static/tailwind.min.css" rel="stylesheet" />
     <!--Regular Datatables CSS-->
-    <link
-      href="./static/jquery.dataTables.min.css"
-      rel="stylesheet"
-    />
+    <link href="./static/jquery.dataTables.min.css" rel="stylesheet" />
     <!--Responsive Extension Datatables CSS-->
-    <link
-      href="/static/responsive.dataTables.min.css"
-      rel="stylesheet"
-    />
-    <script
-      type="text/javascript"
-      src="/static/jquery-3.5.1.js"
-    ></script>
+    <link href="/static/responsive.dataTables.min.css" rel="stylesheet" />
+    <script type="text/javascript" src="/static/jquery-3.5.1.js"></script>
     <!--Datatables -->
     <script src="/static/jquery.dataTables.min.js"></script>
     <script src="/static/dataTables.bootstrap5.min.js"></script>
     <script>
+      let val = ($(window).height() * 80) / 100;
       $(document).ready(function () {
         var table = $("#jobTable")
           .DataTable({
             responsive: true,
-            scrollY: 450,
+            scrollY: val,
             lengthMenu: [
               [50, 25, 10, -1],
               [50, 25, 10, "All"],
@@ -37,6 +26,20 @@
           })
           .columns.adjust()
           .responsive.recalc();
+      });
+    </script>
+    <script>
+            let calcDataTableHeight = function () {
+              return $(window).height() * 55 / 100;
+            };
+            let oTable = $('#jobTable').dataTable({
+              "sScrollY": calcDataTableHeight();
+            });
+
+      $(window).resize(function() {
+        var oSettings = oTable.fnSettings();
+        oSettings.oScroll.sY = calcDataTableHeight();
+        oTable.fnDraw();
       });
     </script>
 
@@ -102,52 +105,45 @@
         > th:first-child:before {
         background-color: #667eea !important; /*bg-indigo-500*/
       }
-table.dataTable thead th {
- border-bottom: none;
-   padding: 3px
-}
+      table.dataTable thead th {
+        border-bottom: none;
+        padding: 1em;
+      }
     </style>
   </head>
-  <body class="bg-gray-100 text-gray-900 tracking-wider leading-normal bg-center">
-    <!--Container-->
-    <div class="container w-full mx-auto px-2 bg-white mt-2">
-      <!--Card-->
-      <div class="p-8 mt-2 lg:mt-0 rounded shadow bg-white">
-        <table
-          id="jobTable"
-          class="stripe hover"
-          style="width: 100%; padding-top: 1em; padding-bottom: 1em;"
-        >
-          <thead class="bg-gray-100">
-            <tr>
-              <th data-priority="1">
-                Title
-              </th>
-              <th data-priority="2">
-                Location
-              </th>
-              <th data-priority="3">
-                Salary
-              </th>
-              <th data-priority="4">
-                Summary
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {{range .}}
-            <tr>
-              <td>
-                <a href="{{.Id}}">{{.Title}}</a>
-              </td>
-              <td>{{.Location}}</td>
-              <td>{{.Salary}}</td>
-              <td>{{.Summary}}</td>
-            </tr>
-            {{end}}
-          </tbody>
-        </table>
-      </div>
+  <body
+    class="bg-gray-100 text-gray-900 tracking-wider leading-normal bg-center"
+  >
+    <!--Card-->
+    <div class="p-8 mx-4 rounded shadow bg-white">
+      <table
+        id="jobTable"
+        class="stripe hover"
+        style="width: 100%; padding-top: 1em; padding-bottom: 1em"
+      >
+        <thead class="bg-gray-100">
+          <tr>
+            <th data-priority="5">Date</th>
+            <th data-priority="3">Title</th>
+            <th data-priority="2">Location</th>
+            <th data-priority="1">Salary</th>
+            <th data-priority="4">Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .}}
+          <tr>
+            <td>{{.Date}}</td>
+            <td>
+              <a href="{{.Id}}">{{.Title}}</a>
+            </td>
+            <td>{{.Location}}</td>
+            <td>{{.Salary}}</td>
+            <td>{{.Summary}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
     </div>
   </body>
 </html>

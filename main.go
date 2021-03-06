@@ -21,6 +21,7 @@ type extractedJob struct {
 	Location string
 	Salary   string
 	Summary  string
+	Date     string
 }
 
 var (
@@ -30,7 +31,7 @@ var (
 )
 
 func main() {
-	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -w=true")
+	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
 	flag.Parse()
 	if query == false {
 		lines, err := ReadCsv("./site/jobs.csv")
@@ -43,6 +44,7 @@ func main() {
 				Location: line[2],
 				Salary:   line[3],
 				Summary:  line[4],
+				Date:     line[5],
 			}
 			jobs = append(jobs, data)
 		}
@@ -158,12 +160,14 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	location := cleanString(card.Find(".sjcl").Text())
 	salary := cleanString(card.Find(".salaryText").Text())
 	summary := cleanString(card.Find(".summary").Text())
+	date := cleanString(card.Find(".date").Text())
 	c <- extractedJob{
 		Id:       id,
 		Title:    title,
 		Location: location,
 		Salary:   salary,
-		Summary:  summary}
+		Summary:  summary,
+		Date:     date}
 }
 
 func writeJobs(jobs []extractedJob) {
@@ -177,7 +181,7 @@ func writeJobs(jobs []extractedJob) {
 	// checkErr(err)
 
 	for _, job := range jobs {
-		jobSlice := []string{job.Id, job.Title, job.Location, job.Salary, job.Summary}
+		jobSlice := []string{job.Id, job.Title, job.Location, job.Salary, job.Summary, job.Date}
 		err = w.Write(jobSlice)
 		checkErr(err)
 	}
@@ -191,8 +195,8 @@ func serveJobs() {
 	http.Handle("/static/",
 		http.StripPrefix("/static", http.FileServer(http.Dir("./site/static"))),
 	)
-	http.Handle("/images",
-		http.StripPrefix("/images", http.FileServer(http.Dir("./site/static/images"))),
+	http.Handle("/static/images/",
+		http.StripPrefix("/static/images", http.FileServer(http.Dir("./site/static/images"))),
 	)
 	fmt.Printf("Serving at http://localhost:%d", listener.Addr().(*net.TCPAddr).Port)
 	log.Fatal(http.Serve(listener, nil))
