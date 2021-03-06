@@ -84,6 +84,7 @@ func main() {
 		}
 	}
 
+	RemoveDuplicates(jobs)
 	writeJobs(jobs)
 	fmt.Println("Finished! Extracted", len(jobs), "jobs!")
 	serveJobs()
@@ -168,6 +169,19 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 		Salary:   salary,
 		Summary:  summary,
 		Date:     date}
+}
+
+func RemoveDuplicates(jobs []extractedJob) {
+	found := make(map[string]bool)
+	j := 0
+	for i, x := range jobs {
+		if !found[x.Summary] {
+			found[x.Summary] = true
+			(jobs)[j] = (jobs)[i]
+			j++
+		}
+	}
+	jobs = (jobs)[:j]
 }
 
 func writeJobs(jobs []extractedJob) {
