@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,25 +24,47 @@ type extractedJob struct {
 }
 
 var (
-	config    SearchConfig
-	baseURL   = "https://www.indeed.com/jobs?"
-	baseQuery = "q=golang"
-	baseLimit = "&limit=50"
-	URL       = baseURL + baseQuery + baseLimit
-	jobs      []extractedJob
-	// urls      []string
+	config SearchConfig
+	jobs   []extractedJob
+	query  bool
 )
 
 func main() {
+	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -w=true")
+	flag.Parse()
+	if query == false {
+		lines, err := ReadCsv("./site/jobs.csv")
+		checkErr(err)
+		// Loop through lines & turn into object
+		for _, line := range lines {
+			data := extractedJob{
+				Id:       line[0],
+				Title:    line[1],
+				Location: line[2],
+				Salary:   line[3],
+				Summary:  line[4],
+			}
+			jobs = append(jobs, data)
+		}
+		serveJobs()
+		os.Exit(0)
+	}
+
 	GetConfig()
 	var urls []string
 	c := make(chan []extractedJob)
 
-	for _, val := range config.Jobs {
-		// fmt.Println("val here", val)
-		for _, v := range val.Location {
-			// fmt.Println(v)
-			urls = append(urls, config.Baseurl+val.Keyword+"&"+v+config.Baselimit)
+	for _, job := range config.Jobs {
+		keyword := strings.TrimSpace(job.Keyword)
+		keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
+		if len(job.Location) == 0 {
+			urls = append(urls, config.Baseurl+keyword+config.Baselimit)
+		}
+		for _, location := range job.Location {
+			fmt.Println(location)
+			loc := strings.TrimSpace(location)
+			loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
+			urls = append(urls, config.Baseurl+keyword+"&"+loc+config.Baselimit)
 		}
 	}
 
@@ -59,12 +83,8 @@ func main() {
 	}
 
 	writeJobs(jobs)
-
 	fmt.Println("Finished! Extracted", len(jobs), "jobs!")
-	fmt.Println("Serving at http://localhost:8888")
-
-	http.HandleFunc("/", genHTML)
-	log.Fatal(http.ListenAndServe(":8888", nil))
+	serveJobs()
 }
 
 func checkErr(err error) {
@@ -107,18 +127,15 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 	c := make(chan extractedJob)
 
 	pageURL := url + "&start=" + strconv.Itoa(page*50)
-	// fmt.Println("Requesting", pageURL)
+	fmt.Println("Requesting", pageURL)
 	res, err := http.Get(pageURL)
 	checkErr(err)
 	checkCode(res)
-
 	defer res.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
-
 	searchCards := doc.Find(".jobsearch-SerpJobCard")
-
 	searchCards.Each(func(i int, card *goquery.Selection) {
 		go extractJob(card, c)
 		// jobs = append(jobs, job)
@@ -136,6 +153,7 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 // channel send only type extractJob
 func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	id, _ := card.Attr("data-jk")
+	id = "https://indeed.com/viewjob?jk=" + id
 	title := cleanString(card.Find(".title>a").Text())
 	location := cleanString(card.Find(".sjcl").Text())
 	salary := cleanString(card.Find(".salaryText").Text())
@@ -149,30 +167,60 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 }
 
 func writeJobs(jobs []extractedJob) {
-	file, err := os.Create("jobs.csv")
+	file, err := os.Create("./site/jobs.csv")
 	checkErr(err)
 
 	w := csv.NewWriter(file)
 	defer w.Flush()
-	headers := []string{"Link", "Title", "Location", "Salary", "Summary"}
-
-	err = w.Write(headers)
-	checkErr(err)
+	// headers := []string{"Link", "Title", "Location", "Salary", "Summary"}
+	// err = w.Write(headers)
+	// checkErr(err)
 
 	for _, job := range jobs {
-		job.Id = "https://indeed.com/viewjob?jk=" + job.Id
 		jobSlice := []string{job.Id, job.Title, job.Location, job.Salary, job.Summary}
 		err = w.Write(jobSlice)
 		checkErr(err)
 	}
 }
 
-func genHTML(w http.ResponseWriter, r *http.Request) {
+func serveJobs() {
+	listener, err := net.Listen("tcp", ":0")
+	checkErr(err)
+	// handle `/static` route
+	http.HandleFunc("/", serveTemplate)
+	http.Handle("/static/",
+		http.StripPrefix("/static", http.FileServer(http.Dir("./site/static"))),
+	)
+	http.Handle("/images",
+		http.StripPrefix("/images", http.FileServer(http.Dir("./site/static/images"))),
+	)
+	fmt.Printf("Serving at http://localhost:%d", listener.Addr().(*net.TCPAddr).Port)
+	log.Fatal(http.Serve(listener, nil))
+}
+
+func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("Underlying Type: %T\n", jobs)
 	// fmt.Printf("Underlying Value: %v\n", jobs)
-	t, err := template.ParseFiles("layout.html")
+	fmt.Println(r.URL.Path)
+	t, err := template.ParseFiles("./site/layout.html")
 	checkErr(err)
 	err = t.Execute(w, jobs)
 	checkErr(err)
+}
 
+// ReadCsv accepts a file and returns its content as a multi-dimentional type
+// with lines and each column. Only parses to string type.
+func ReadCsv(filename string) ([][]string, error) {
+	// Open CSV file
+	f, err := os.Open(filename)
+	if err != nil {
+		return [][]string{}, err
+	}
+	defer f.Close()
+	// Read File into a Variable
+	lines, err := csv.NewReader(f).ReadAll()
+	if err != nil {
+		return [][]string{}, err
+	}
+	return lines, nil
 }
