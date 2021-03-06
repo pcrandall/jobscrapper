@@ -121,9 +121,7 @@ func cleanString(str string) string {
 }
 
 func getPages(url string) int {
-
 	pages := 0
-
 	res, err := http.Get(url)
 	checkErr(err)
 	checkCode(res)
@@ -132,11 +130,15 @@ func getPages(url string) int {
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
+
 	doc.Find(".pagination").Each(func(i int, s *goquery.Selection) {
 		pages = s.Find("a").Length()
 	})
 
-	fmt.Println("found some pagins", pages)
+	// TODO make this better
+	// doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
+	// 	fmt.Println("searchCountPages text here", s.Text())
+	// })
 
 	return pages
 }
@@ -207,14 +209,15 @@ func getFullDescription(url string, description chan<- string) {
 	// fmt.Println("DOC HERE: ", doc)
 	checkErr(err)
 
-	card := doc.Find(".jobsearch-JobDescriptionText")
-	fmt.Println("Card HERE: ", card)
-	fmt.Printf("%+v\n", card)
-
-	d := cleanString(doc.Find(".jobsearch-JobDescriptionText").Text())
-	fmt.Println("D HERE: ", d)
-	fmt.Printf("%+v\n", d)
-	description <- d
+	// card := doc.Find("#jobDescriptionText").Text()
+	// // fmt.Println("Card HERE: ", card)
+	// // fmt.Printf("%+v\n", card)
+	// // d := cleanString(doc.Find(".jobsearch-JobDescriptionText").Text())
+	// d := cleanString(card)
+	d := doc.Find("#jobDescriptionText")
+	checkType(d)
+	des := doc.Find("#jobDescriptionText").Text()
+	description <- des
 }
 
 func RemoveDuplicates(jobs []extractedJob) {
@@ -239,9 +242,8 @@ func writeJobs(jobs []extractedJob) {
 	// headers := []string{"Link", "Title", "Location", "Salary", "Summary"}
 	// err = w.Write(headers)
 	// checkErr(err)
-
 	for _, job := range jobs {
-		jobSlice := []string{job.Id, job.Title, job.Location, job.Salary, job.Summary, job.Date}
+		jobSlice := []string{job.Id, job.Title, job.Location, job.Salary, job.Summary, job.Date, job.FullDesc}
 		err = w.Write(jobSlice)
 		checkErr(err)
 	}
@@ -287,4 +289,12 @@ func ReadCsv(filename string) ([][]string, error) {
 		return [][]string{}, err
 	}
 	return lines, nil
+}
+
+func checkType(s interface{}) {
+	// for k, _ := range s {
+	// 	fmt.Printf("%T %v\n", s[k], s[k])
+	// }
+
+	fmt.Printf("%T %v\n", s, s)
 }

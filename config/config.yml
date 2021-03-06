@@ -3,9 +3,9 @@ baselimit : "&limit=50"
 
 jobs:
 - job:
-  keyword: golang
-  # location:
-    # - Nashville TN
+  keyword: controls engineer
+  location:
+    - Tennessee
     # - Boulder CO
     # - Missoula MT
     # - Columbus OH
@@ -19,11 +19,11 @@ jobs:
     # - Eugene OR
     # - Burlington VT
 
-- job:
-  keyword: python
+# - job:
+#   keyword: python
 
-- job:
-  keyword: full stack developer
+# - job:
+#   keyword: full stack developer
 
-- job:
-  keyword: front-end developer
+# - job:
+#   keyword: front-end developer

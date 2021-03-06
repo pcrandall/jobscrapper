@@ -113,12 +113,16 @@
       $(document).ready(function () {
         $("#jobTable").on("click", "tr", function (e) {
           if (e.target.cellIndex === 4) {
-            let val = $("td", this).eq(4).text(); //eq(2) increase the value inside eq() will display the txt column wise.
+            let val = $("td", this).eq(5).text(); // full description thats hidden
             let link =
               e.currentTarget.children[1].firstElementChild.attributes.href
                 .nodeValue;
-                  link =  '<a href="' + link +  '">View Job</a>'
-            $('#jobButton').html(link);
+                  console.log(link)
+            <!-- fetch(link) -->
+            <!--   .then((data) => console.log(data)) -->
+            <!--   .catch((err) => console.log(err)); -->
+            link = '<a href="' + link + '">View Job</a>';
+            $("#jobButton").html(link);
             toggleModal(val);
           } else {
             if (e.currentTarget.children[1]) {
@@ -152,6 +156,7 @@
             <th data-priority="3">Location</th>
             <th data-priority="2">Salary</th>
             <th data-priority="4">Summary</th>
+            <th data-priority="6" style="display: none;">FullDesc</th>
           </tr>
         </thead>
         <tbody>
@@ -164,6 +169,7 @@
             <td>{{.Location}}</td>
             <td>{{.Salary}}</td>
             <td>{{.Summary}}</td>
+            <td style="display: none;">{{.FullDesc}}</td>
           </tr>
           {{end}}
         </tbody>
@@ -174,17 +180,15 @@
       class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center"
     >
       <div
-        class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"
+        class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 modal-close cursor-pointer"
       ></div>
-      <div
-        class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"
-      >
+      <div class="modal-container fixed w-4/6 h-5/6 z-50 bg-white overflow-y-auto rounded shadow-lg">
         <!-- Add margin if you want to see some of the overlay behind the modal-->
-        <div class="modal-content py-4 text-left px-6">
+        <div class="modal-content py-4 text-left px-6 flex flex-col items-center mx-10 text-black z-50">
           <!--Title-->
           <div class="flex justify-between items-center pb-3">
-            <p class="text-2xl font-bold">Job Description</p>
-            <div class="modal-close cursor-pointer z-50">
+            <p class="text-2xl font-bold px-4">Job Description</p>
+            <div class="modal-close cursor-pointer z-50 absolute top-5 right-5">
               <svg
                 class="fill-current text-black"
                 xmlns="http://www.w3.org/2000/svg"
@@ -203,14 +207,14 @@
           <!--Footer-->
           <div class="flex justify-center pt-2">
             <button
-              class="px-4 bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-800 mr-2"
+              class="mt-4 px-4 bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-800 mr-2"
               id="jobButton"
-            >
-            </button>
+            ></button>
           </div>
         </div>
       </div>
     </div>
+
     <script>
       const overlay = document.querySelector(".modal-overlay");
       overlay.addEventListener("click", toggleModal);
