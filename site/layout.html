@@ -111,16 +111,18 @@
       });
 
       $(document).ready(function () {
-        $("#jobTable").on("click", "tr", function () {
-          var val = $("td", this).eq(4).text(); //eq(2) increase the value inside eq() will display the txt column wise.
-          console.log(val);
-          toggleModal(val);
+        $("#jobTable").on("click", "tr", function (e) {
+          if (e.target.cellIndex === 4) {
+            console.log(e.target.cellIndex);
+            var val = $("td", this).eq(4).text(); //eq(2) increase the value inside eq() will display the txt column wise.
+            console.log(val);
+            toggleModal(val);
+          }
 
           $("#jobModal").modal("show");
           $(".text-center").text(val);
         });
         $("#jobTable").fadeIn(500);
-        toggleModal("INIT");
       });
     </script>
   </head>
