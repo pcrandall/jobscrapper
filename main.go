@@ -121,7 +121,7 @@ func cleanString(str string) string {
 }
 
 func cleanFullDesc(str string) string {
-	return strings.Join(strings.Fields(strings.TrimSpace(str)), "\n")
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), "####")
 }
 
 func getPages(url string) int {
@@ -221,6 +221,12 @@ func getFullDescription(url string, description chan<- string) {
 	d := doc.Find("#jobDescriptionText")
 	checkType(d)
 	des := doc.Find("#jobDescriptionText").Text()
+	// s.Contents().Each(func(i int, s *goquery.Selection) {
+	// 	if goquery.NodeName(s) == "#text" {
+	// 		fmt.Println(s.Text())
+	// 	}
+	// })
+	// des := doc.Find("#jobDescriptionText").Text()
 	description <- des
 }
 
