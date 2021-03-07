@@ -88,6 +88,10 @@
         overflow-x: hidden;
         overflow-y: visible !important;
       }
+      #modal-content {
+        height: 64vh;
+        overflow-y: auto;
+      }
     </style>
 
     <script type="text/javascript" src="/static/jquery-3.5.1.js"></script>
@@ -168,7 +172,7 @@
             </td>
             <td>{{.Location}}</td>
             <td>{{.Salary}}</td>
-            <td>{{.Summary}}</td>
+            <td style="cursor: pointer;">{{.Summary}}</td>
             <td style="display: none;">{{.FullDesc}}</td>
           </tr>
           {{end}}
@@ -182,7 +186,7 @@
       <div
         class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 modal-close cursor-pointer"
       ></div>
-      <div class="modal-container fixed w-4/6 h-5/6 z-50 bg-white overflow-y-auto rounded shadow-lg">
+      <div class="modal-container fixed w-4/6 h-5/6 z-50 bg-white px-4 shadow-lg">
         <!-- Add margin if you want to see some of the overlay behind the modal-->
         <div class="modal-content py-4 text-left px-6 flex flex-col items-center mx-10 text-black z-50">
           <!--Title-->
