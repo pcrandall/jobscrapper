@@ -168,7 +168,7 @@
             </td>
             <td>{{.Location}}</td>
             <td>{{.Salary}}</td>
-            <td>{{.Summary}}</td>
+            <td style="cursor: pointer;">{{.Summary}}</td>
             <td style="display: none;">{{.FullDesc}}</td>
           </tr>
           {{end}}
@@ -214,7 +214,6 @@
         </div>
       </div>
     </div>
-
     <script>
       const overlay = document.querySelector(".modal-overlay");
       overlay.addEventListener("click", toggleModal);

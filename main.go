@@ -120,6 +120,10 @@ func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
+func cleanFullDesc(str string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(str)), "\n")
+}
+
 func getPages(url string) int {
 	pages := 0
 	res, err := http.Get(url)
