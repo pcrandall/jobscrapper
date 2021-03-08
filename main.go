@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"text/template"
@@ -36,7 +37,6 @@ func main() {
 	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
 	flag.Parse()
 	if query == false {
-		// fmt.Println("query here: ", query)
 		lines, err := ReadCsv("./site/jobs.csv")
 		checkErr(err)
 		// Loop through lines & turn into object
@@ -72,22 +72,18 @@ func main() {
 		keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
 		if len(job.Location) == 0 {
 			urls = append(urls, config.Baseurl+keyword+config.Baselimit)
-			// fmt.Println(urls)
 		}
 		for _, location := range job.Location {
-			// fmt.Println(location)
 			loc := strings.TrimSpace(location)
 			loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
 			urls = append(urls, config.Baseurl+keyword+"&"+loc+config.Baselimit)
-			// fmt.Println(urls)
+			fmt.Println("Finding", job.Keyword, "jobs in", location)
 		}
 	}
 
 	for _, url := range urls {
 		totalPages := getPages(url)
-		// fmt.Println("total pagins", totalPages)
 		for i := 0; i < totalPages; i++ {
-			// fmt.Println("we pagin")
 			go getPage(url, i, c)
 			// extractedJobs := getPage(i)
 			// jobs = append(jobs, extractedJobs...)
@@ -154,7 +150,7 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 	c := make(chan extractedJob)
 
 	pageURL := url + "&start=" + strconv.Itoa(page*50)
-	fmt.Println("Requesting", pageURL)
+	// fmt.Println("Requesting", pageURL)
 	res, err := http.Get(pageURL)
 	checkErr(err)
 	checkCode(res)
@@ -205,14 +201,14 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 }
 
 func getFullDescription(url string, description chan<- string) {
-	// fmt.Println("Requesting", url)
 	res, err := http.Get(url)
 	checkErr(err)
 	checkCode(res)
 	defer res.Body.Close()
 	doc, err := goquery.NewDocumentFromReader(res.Body)
-	// fmt.Println("DOC HERE: ", doc)
 	checkErr(err)
+	des := doc.Find("#jobDescriptionText").Text()
+	description <- des
 
 	// card := doc.Find("#jobDescriptionText").Text()
 	// // fmt.Println("Card HERE: ", card)
@@ -230,9 +226,7 @@ func getFullDescription(url string, description chan<- string) {
 	// })
 	// checkType(d)
 
-	des := doc.Find("#jobDescriptionText").Text()
 	// des := doc.Find("#jobDescriptionText").Text()
-	description <- des
 }
 
 func RemoveDuplicates(jobs []extractedJob) {
@@ -280,8 +274,6 @@ func serveJobs() {
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
-	// fmt.Printf("Underlying Type: %T\n", jobs)
-	// fmt.Printf("Underlying Value: %v\n", jobs)
 	fmt.Println(r.URL.Path)
 	t, err := template.ParseFiles("./site/layout.html")
 	checkErr(err)
@@ -306,10 +298,51 @@ func ReadCsv(filename string) ([][]string, error) {
 	return lines, nil
 }
 
-func checkType(s interface{}) {
+func checkType(t interface{}) {
+
+	switch reflect.TypeOf(t).Kind() {
+
+	case reflect.Slice:
+		s := reflect.ValueOf(t)
+		for i := 0; i < s.Len(); i++ {
+			fmt.Println(s.Index(i))
+		}
+
+	case reflect.Array:
+		s := reflect.ValueOf(t)
+		for i := 0; i < s.Len(); i++ {
+			fmt.Println(s.Index(i))
+		}
+
+	case reflect.Chan:
+		s := reflect.ValueOf(t)
+		for i := 0; i < s.Len(); i++ {
+			fmt.Println(s.Index(i))
+		}
+
+	case reflect.Func:
+		s := reflect.ValueOf(t)
+		for i := 0; i < s.Len(); i++ {
+			fmt.Println(s.Index(i))
+		}
+
+	case reflect.Map:
+		s := reflect.ValueOf(t)
+		for i := 0; i < s.Len(); i++ {
+			fmt.Println(s.Index(i))
+		}
+
+	default:
+		fmt.Printf("Underlying Type: %T\n", t)
+		fmt.Printf("Underlying Value: %v\n", t)
+	}
+
 	// for k, _ := range s {
-	// 	fmt.Printf("%T %v\n", s[k], s[k])
+	// 	fmt.Printf("Underlying Type: %T\n  Underlying Value: %v\n", s[k], s[k])
 	// }
 
-	fmt.Printf("%T %v\n", s, s)
+	// fmt.Printf("Underlying Type: %T\n", jobs)
+	// fmt.Printf("Underlying Value: %v\n", jobs)
+
+	// fmt.Printf("%T %v\n", s, s)
 }
