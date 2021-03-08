@@ -79,10 +79,9 @@
         display: none;
       }
     </style>
-
     <style>
       .modal {
-        transition: opacity 0.55s ease;
+        transition: opacity 0.15s ease;
       }
       body.modal-active {
         overflow-x: hidden;
@@ -100,6 +99,21 @@
         -ms-user-select: none; /* Internet Explorer/Edge */
         user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
+      }
+      #modal-content::-webkit-scrollbar {
+                  width: 4px;
+                  cursor: pointer;
+
+      }
+      #modal-content::-webkit-scrollbar-track {
+          background-color: rgba(229, 231, 235, var(--bg-opacity));
+          cursor: pointer;
+          /*background: red;*/
+      }
+      #modal-content::-webkit-scrollbar-thumb {
+          cursor: pointer;
+          background-color: #a0aec0;
+          /*outline: 1px solid slategrey;*/
       }
     </style>
 
@@ -127,6 +141,7 @@
         $("#jobTable").on("click", "tr", function (e) {
           if (e.target.cellIndex === 4) {
             let val = $("td", this).eq(5).text(); // full description thats hidden
+            val = val.replace(/\n/g,"<br>"); // replace line breaks with <br>
             let link =
               e.currentTarget.children[1].firstElementChild.attributes.href
                 .nodeValue;
@@ -196,7 +211,7 @@
         class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 modal-close cursor-pointer"
       ></div>
       <div
-        class="modal-container fixed w-4/6 h-5/6 z-50 bg-white px-4 shadow-lg"
+        class="modal-container fixed w-5/6 h-5/6 z-50 bg-white px-4 shadow-lg"
       >
         <!-- Add margin if you want to see some of the overlay behind the modal-->
         <div

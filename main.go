@@ -72,22 +72,22 @@ func main() {
 		keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
 		if len(job.Location) == 0 {
 			urls = append(urls, config.Baseurl+keyword+config.Baselimit)
-			fmt.Println(urls)
+			// fmt.Println(urls)
 		}
 		for _, location := range job.Location {
-			fmt.Println(location)
+			// fmt.Println(location)
 			loc := strings.TrimSpace(location)
 			loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
 			urls = append(urls, config.Baseurl+keyword+"&"+loc+config.Baselimit)
-			fmt.Println(urls)
+			// fmt.Println(urls)
 		}
 	}
 
 	for _, url := range urls {
 		totalPages := getPages(url)
-		fmt.Println("total pagins", totalPages)
+		// fmt.Println("total pagins", totalPages)
 		for i := 0; i < totalPages; i++ {
-			fmt.Println("we pagin")
+			// fmt.Println("we pagin")
 			go getPage(url, i, c)
 			// extractedJobs := getPage(i)
 			// jobs = append(jobs, extractedJobs...)
@@ -219,15 +219,17 @@ func getFullDescription(url string, description chan<- string) {
 	// // fmt.Printf("%+v\n", card)
 	// // d := cleanString(doc.Find(".jobsearch-JobDescriptionText").Text())
 	// d := cleanString(card)
-	d := doc.Find("#jobDescriptionText")
 
-	d.Contents().Each(func(i int, s *goquery.Selection) {
-		// if goquery.NodeName(s) == "#text" {
-		// 	fmt.Println(s.Text())
-		// }
-		fmt.Println(s)
-	})
+	// d := doc.Find("#jobDescriptionText")
+
+	// d.Contents().Each(func(i int, s *goquery.Selection) {
+	// 	// if goquery.NodeName(s) == "#text" {
+	// 	// 	fmt.Println(s.Text())
+	// 	// }
+	// 	fmt.Println(s)
+	// })
 	// checkType(d)
+
 	des := doc.Find("#jobDescriptionText").Text()
 	// des := doc.Find("#jobDescriptionText").Text()
 	description <- des

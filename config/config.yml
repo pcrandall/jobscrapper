@@ -4,27 +4,19 @@ baselimit : "&limit=50"
 jobs:
 - job:
   keyword: controls engineer
-  # location:
-  #   - Tennessee
-    # - Boulder CO
-    # - Missoula MT
-    # - Columbus OH
-    # - Carmel IN
-    # - Olympia WA
-    # - Bozeman ID
-    # - Salt Lake City UT
-    # - Port Townsend WA
-    # - Arlington TX
-    # - Bentonville AR
-    # - Eugene OR
-    # - Burlington VT
-    #
+  location:
+    - Boulder CO
+    - Carmel IN
+    - Olympia WA
+    - Bozeman ID
+    - Salt Lake City UT
+    - Port Townsend WA
+    - Bentonville AR
+    - Eugene OR
+    - Burlington VT
 
 - job:
   keyword: golang
-
-- job:
-  keyword: python
 
 - job:
   keyword: full stack developer
