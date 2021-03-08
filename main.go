@@ -36,7 +36,7 @@ func main() {
 	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
 	flag.Parse()
 	if query == false {
-		fmt.Println("query here: ", query)
+		// fmt.Println("query here: ", query)
 		lines, err := ReadCsv("./site/jobs.csv")
 		checkErr(err)
 		// Loop through lines & turn into object
@@ -48,6 +48,7 @@ func main() {
 				Salary:   line[3],
 				Summary:  line[4],
 				Date:     line[5],
+				FullDesc: line[6],
 			}
 			jobs = append(jobs, data)
 		}
@@ -219,13 +220,15 @@ func getFullDescription(url string, description chan<- string) {
 	// // d := cleanString(doc.Find(".jobsearch-JobDescriptionText").Text())
 	// d := cleanString(card)
 	d := doc.Find("#jobDescriptionText")
-	checkType(d)
+
+	d.Contents().Each(func(i int, s *goquery.Selection) {
+		// if goquery.NodeName(s) == "#text" {
+		// 	fmt.Println(s.Text())
+		// }
+		fmt.Println(s)
+	})
+	// checkType(d)
 	des := doc.Find("#jobDescriptionText").Text()
-	// s.Contents().Each(func(i int, s *goquery.Selection) {
-	// 	if goquery.NodeName(s) == "#text" {
-	// 		fmt.Println(s.Text())
-	// 	}
-	// })
 	// des := doc.Find("#jobDescriptionText").Text()
 	description <- des
 }
