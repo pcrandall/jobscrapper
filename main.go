@@ -71,6 +71,7 @@ func main() {
 		keyword := strings.TrimSpace(job.Keyword)
 		keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
 		if len(job.Location) == 0 {
+			fmt.Println("Finding", job.Keyword)
 			urls = append(urls, config.Baseurl+keyword+config.Baselimit)
 		}
 		for _, location := range job.Location {
@@ -81,15 +82,20 @@ func main() {
 		}
 	}
 
+	//TODO make channgel and go func here
 	for _, url := range urls {
 		totalPages := getPages(url)
-		for i := 0; i < totalPages; i++ {
-			go getPage(url, i, c)
-			// extractedJobs := getPage(i)
-			// jobs = append(jobs, extractedJobs...)
+		// fmt.Println("totalPages here:", totalPages)
+		pageLimit := config.Maxresults / 50
+		// fmt.Println("pageLimit here:", pageLimit)
+		if pageLimit > totalPages {
+			pageLimit = totalPages
 		}
-
-		for i := 0; i < totalPages; i++ {
+		// fmt.Println("pageLimit here:", pageLimit)
+		for i := 0; i < pageLimit; i++ {
+			go getPage(url, i, c)
+		}
+		for i := 0; i < pageLimit; i++ {
 			extractedJobs := <-c
 			jobs = append(jobs, extractedJobs...)
 		}
@@ -140,7 +146,6 @@ func getPages(url string) int {
 	// doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
 	// 	fmt.Println("searchCountPages text here", s.Text())
 	// })
-
 	return pages
 }
 
@@ -148,9 +153,9 @@ func getPages(url string) int {
 func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 	var jobs []extractedJob
 	c := make(chan extractedJob)
-
 	pageURL := url + "&start=" + strconv.Itoa(page*50)
-	// fmt.Println("Requesting", pageURL)
+
+	fmt.Println("Requesting", pageURL)
 	res, err := http.Get(pageURL)
 	checkErr(err)
 	checkCode(res)
@@ -169,8 +174,7 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 		jobs = append(jobs, job)
 	}
 
-	// return jobs
-	mainChannel <- jobs
+	mainChannel <- jobs // return jobs
 }
 
 // channel send only type extractJob
@@ -184,10 +188,8 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	date := cleanString(card.Find(".date").Text())
 
 	fullDescription := make(chan string)
-
 	go getFullDescription(id, fullDescription)
-
-	BigJob := <-fullDescription
+	fulldesc := <-fullDescription
 
 	c <- extractedJob{
 		Id:       id,
@@ -196,8 +198,9 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 		Salary:   salary,
 		Summary:  summary,
 		Date:     date,
-		FullDesc: BigJob,
+		FullDesc: fulldesc,
 	}
+
 }
 
 func getFullDescription(url string, description chan<- string) {
@@ -207,6 +210,10 @@ func getFullDescription(url string, description chan<- string) {
 	defer res.Body.Close()
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
+
+	// d := doc.Find("#jobDescriptionText")
+	// checkType(d)
+
 	des := doc.Find("#jobDescriptionText").Text()
 	description <- des
 

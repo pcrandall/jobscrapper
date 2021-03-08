@@ -9,9 +9,10 @@ import (
 )
 
 type SearchConfig struct {
-	Baseurl   string `yaml:"baseurl"`
-	Baselimit string `yaml:"baselimit"`
-	Jobs      []struct {
+	Baseurl    string `yaml:"baseurl"`
+	Baselimit  string `yaml:"baselimit"`
+	Maxresults int    `yaml:"maxresults"`
+	Jobs       []struct {
 		Job      interface{} `yaml:"job"`
 		Keyword  string      `yaml:"keyword"`
 		Location []string    `yaml:"location"`

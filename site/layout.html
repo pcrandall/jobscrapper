@@ -141,14 +141,10 @@
         $("#jobTable").on("click", "tr", function (e) {
           if (e.target.cellIndex === 4) {
             let val = $("td", this).eq(5).text(); // full description thats hidden
-            val = val.replace(/\n/g,"<br>"); // replace line breaks with <br>
+                  val = val.replace(/\n/g,"<br> <br>"); // replace line breaks with <br>
             let link =
               e.currentTarget.children[1].firstElementChild.attributes.href
                 .nodeValue;
-            console.log(link);
-            <!-- fetch(link) -->
-            <!--   .then((data) => console.log(data)) -->
-            <!--   .catch((err) => console.log(err)); -->
             link = '<a href="' + link + '">View Job</a>';
             $("#jobButton").html(link);
             toggleModal(val);

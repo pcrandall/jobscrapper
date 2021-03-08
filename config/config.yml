@@ -1,5 +1,6 @@
 baseurl   : https://www.indeed.com/jobs?
 baselimit : "&limit=50"
+maxresults : 100
 
 jobs:
 - job:
