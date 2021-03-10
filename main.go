@@ -14,29 +14,11 @@ import (
 	"text/template"
 
 	"github.com/PuerkitoBio/goquery"
-)
-
-type extractedJob struct {
-	Id       string
-	Title    string
-	Location string
-	Salary   string
-	Summary  string
-	Date     string
-	FullDesc string
-}
-
-var (
-	config  SearchConfig
-	jobs    []extractedJob
-	query   bool
-	logfile *os.File
+	"github.com/gobuffalo/packr/v2"
 )
 
 func main() {
 	CheckQuery()
-	SetLog()
-	GetConfig()
 	var urls []string
 	c := make(chan []extractedJob)
 
@@ -104,21 +86,6 @@ func CheckQuery() {
 	}
 }
 
-func SetLog() {
-	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	log.SetOutput(logfile)
-	defer logfile.Close()
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
 func checkCode(res *http.Response) {
 	if res.StatusCode != 200 {
 		log.Fatalln("Request failed with status:", res.StatusCode)
@@ -129,6 +96,7 @@ func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
+// TODO make this better
 func cleanFullDesc(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), "####")
 }
@@ -274,22 +242,34 @@ func writeJobs(jobs []extractedJob) {
 func serveJobs() {
 	listener, err := net.Listen("tcp", ":0")
 	checkErr(err)
-	// handle `/static` route
+	staticbox := packr.New("staticBox", "./site/static")
+	imagebox := packr.New("staticBox", "./site/static/images")
+
 	http.HandleFunc("/", serveTemplate)
-	http.Handle("/static/",
-		http.StripPrefix("/static", http.FileServer(http.Dir("./site/static"))),
+	http.Handle("/static/", // handle `/static` route
+		http.StripPrefix("/static", http.FileServer(http.Dir(staticbox.Path))),
 	)
-	http.Handle("/static/images/",
-		http.StripPrefix("/static/images", http.FileServer(http.Dir("./site/static/images"))),
+	http.Handle("/static/images/", // handle `/static/images` route
+		http.StripPrefix("/static/images", http.FileServer(http.Dir(imagebox.Path))),
 	)
+
 	fmt.Printf("Serving at http://localhost:%d", listener.Addr().(*net.TCPAddr).Port)
 	log.Fatal(http.Serve(listener, nil))
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
+
+	// sitebox := packr.New("layoutbox", "./site")
+
+	// layout, err := sitebox.FindString("./site/layout.html")
+	// checkErr(err)
+
+	// t, err := template.ParseFiles(layout)
+	// checkErr(err)
+
 	t, err := template.ParseFiles("./site/layout.html")
 	checkErr(err)
+
 	err = t.Execute(w, jobs)
 	checkErr(err)
 }
