@@ -1,13 +1,13 @@
-GOBINDATA := $(shell command -v go-bindata 2> /dev/null)
+GOPACKR := $(shell command -v packr2 2> /dev/null)
 currentDir = $(shell pwd)
 releasesOutputDir = ${currentDir}/releases/$(date +'%F')
 
 
 ## installation
 install:
-ifndef GOBINDATA
+ifndef GOPACKR
 	@echo "==> installing go-bindata"
-	@go get -u github.com/go-bindata/go-bindata/...
+    @go get -u github.com/gobuffalo/packr/v2/...
 endif
 	@echo "==> installing go dependencies"
 	@go mod download
@@ -17,6 +17,12 @@ run:
 	@echo "==> running job scrapper"
 	@${currentDir}/scripts/run.sh
 .PHONY: run
+
+
+runquery:
+	@echo "==> running job scrapper with query"
+	@${currentDir}/scripts/runquery.sh
+.PHONY: runquery
 
 buildwindows:
 	@echo "==> building job scrapper for windows"

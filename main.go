@@ -34,35 +34,8 @@ var (
 )
 
 func main() {
-	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
-	flag.Parse()
-	if query == false {
-		lines, err := ReadCsv("./site/jobs.csv")
-		checkErr(err)
-		// Loop through lines & turn into object
-		for _, line := range lines {
-			data := extractedJob{
-				Id:       line[0],
-				Title:    line[1],
-				Location: line[2],
-				Salary:   line[3],
-				Summary:  line[4],
-				Date:     line[5],
-				FullDesc: line[6],
-			}
-			jobs = append(jobs, data)
-		}
-		serveJobs()
-		os.Exit(0)
-	}
-
-	logfile, err := os.OpenFile("logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	log.SetOutput(logfile)
-	defer logfile.Close()
-
+	CheckQuery()
+	SetLog()
 	GetConfig()
 	var urls []string
 	c := make(chan []extractedJob)
@@ -105,6 +78,39 @@ func main() {
 	writeJobs(jobs)
 	fmt.Println("Finished! Extracted", len(jobs), "jobs!")
 	serveJobs()
+}
+
+func CheckQuery() {
+	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
+	flag.Parse()
+	if query == false {
+		lines, err := ReadCsv("./jobs/jobs.csv")
+		checkErr(err)
+		// Loop through lines & turn into object
+		for _, line := range lines {
+			data := extractedJob{
+				Id:       line[0],
+				Title:    line[1],
+				Location: line[2],
+				Salary:   line[3],
+				Summary:  line[4],
+				Date:     line[5],
+				FullDesc: line[6],
+			}
+			jobs = append(jobs, data)
+		}
+		serveJobs()
+		os.Exit(0)
+	}
+}
+
+func SetLog() {
+	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logfile)
+	defer logfile.Close()
 }
 
 func checkErr(err error) {
@@ -250,7 +256,7 @@ func RemoveDuplicates(jobs []extractedJob) {
 }
 
 func writeJobs(jobs []extractedJob) {
-	file, err := os.Create("./site/jobs.csv")
+	file, err := os.Create("./jobs/jobs.csv")
 	checkErr(err)
 
 	w := csv.NewWriter(file)

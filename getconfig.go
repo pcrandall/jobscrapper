@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
+	"github.com/gobuffalo/packr/v2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -30,11 +32,17 @@ func GetConfig() {
 			panic(err)
 		}
 	} else if os.IsNotExist(err) { // config file not included, use embedded config
-		yamlFile, err := Asset("config/config.yml")
+		yamlFile := packr.New("configBox", "./config")
+
+		configFile, err := yamlFile.Find("config.yml")
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
-		err = yaml.Unmarshal(yamlFile, &config)
+		// yamlFile, err := Asset("config/config.yml")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		err = yaml.Unmarshal(configFile, &config)
 		if err != nil {
 			panic(err)
 		}

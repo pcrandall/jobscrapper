@@ -101,19 +101,18 @@
                                   supported by Chrome, Edge, Opera and Firefox */
       }
       #modal-content::-webkit-scrollbar {
-                  width: 4px;
-                  cursor: pointer;
-
+        width: 4px;
+        cursor: pointer;
       }
       #modal-content::-webkit-scrollbar-track {
-          background-color: rgba(229, 231, 235, var(--bg-opacity));
-          cursor: pointer;
-          /*background: red;*/
+        background-color: rgba(229, 231, 235, var(--bg-opacity));
+        cursor: pointer;
+        /*background: red;*/
       }
       #modal-content::-webkit-scrollbar-thumb {
-          cursor: pointer;
-          background-color: #a0aec0;
-          /*outline: 1px solid slategrey;*/
+        cursor: pointer;
+        background-color: #a0aec0;
+        /*outline: 1px solid slategrey;*/
       }
     </style>
 
@@ -122,7 +121,23 @@
     <script src="/static/jquery.dataTables.min.js"></script>
     <script src="/static/dataTables.bootstrap5.min.js"></script>
     <script>
-      let val = ($(window).height() * 60) / 100;
+      const width =
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth;
+      const height =
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight;
+      let m = 0;
+      if (height > 1080) {
+        m = 78;
+      } else if (height > 1440){
+        m = 117;
+      } else {
+        m = 60;
+      }
+      let val = ($(window).height() * m) / 100;
       $(document).ready(function () {
         var table = $("#jobTable")
           .DataTable({
@@ -141,7 +156,7 @@
         $("#jobTable").on("click", "tr", function (e) {
           if (e.target.cellIndex === 4) {
             let val = $("td", this).eq(5).text(); // full description thats hidden
-                  val = val.replace(/\n/g,"<br> <br>"); // replace line breaks with <br>
+            val = val.replace(/\n/g, "<br> <br>"); // replace line breaks with <br>
             let link =
               e.currentTarget.children[1].firstElementChild.attributes.href
                 .nodeValue;
@@ -192,8 +207,8 @@
             </td>
             <td>{{.Location}}</td>
             <td>{{.Salary}}</td>
-            <td style="cursor: pointer;">{{.Summary}}</td>
-            <td style="display: none;">{{.FullDesc}}</td>
+            <td style="cursor: pointer">{{.Summary}}</td>
+            <td style="display: none">{{.FullDesc}}</td>
           </tr>
           {{end}}
         </tbody>

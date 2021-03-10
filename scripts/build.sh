@@ -1,7 +1,5 @@
 #! /bin/bash
-
 #embed config.yml
-go-bindata -o config.go config
-
+packr2
 # GOOS=linux GOARCH=386 go build .
 go build .
