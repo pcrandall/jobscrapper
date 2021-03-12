@@ -15,6 +15,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
+	"github.com/markbates/pkger"
 )
 
 func main() {
@@ -267,7 +268,11 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	// t, err := template.ParseFiles(layout)
 	// checkErr(err)
 
-	t, err := template.ParseFiles("./site/layout.html")
+	f, err := pkger.Open("./site/layout.html")
+	checkErr(err)
+	defer f.Close()
+
+	t, err := template.ParseFiles(f.Name())
 	checkErr(err)
 
 	err = t.Execute(w, jobs)

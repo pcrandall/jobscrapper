@@ -1,4 +1,4 @@
 #! /bin/bash
 #embed config.yml
-packr2
+pkger
 go run . -q=true

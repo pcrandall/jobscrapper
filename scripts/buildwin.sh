@@ -1,4 +1,4 @@
 #! /bin/bash
 #embed config.yml
-packr2
+pkger
 GOOS=windows GOARCH=386 go build .
