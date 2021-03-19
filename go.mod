@@ -7,6 +7,7 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/karrick/godirwalk v1.16.1 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
+	github.com/markbates/pkger v0.17.1
 	github.com/rogpeppe/go-internal v1.7.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.1.3 // indirect
