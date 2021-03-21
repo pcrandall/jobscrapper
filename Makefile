@@ -1,14 +1,14 @@
-GOPACKR := $(shell command -v packr2 2> /dev/null)
+PACKR2 := $(shell command -v packr2 2> /dev/null)
 currentDir = $(shell pwd)
 releasesOutputDir = ${currentDir}/releases/$(date +'%F')
 
 
-# ifndef GOPACKR
-# 	@echo "==> installing go-bindata"
-#     @go get -u github.com/gobuffalo/packr/v2/...
-# endif
-## installation
 install:
+ifndef PACKR2
+	@echo "==> installing packr2"
+	@go get -u github.com/gobuffalo/packr/v2/packr2
+endif
+
 	@echo "==> installing go dependencies"
 	@go mod download
 .PHONY: install

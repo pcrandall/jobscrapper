@@ -1,5 +1,5 @@
 #! /bin/bash
 #embed config.yml
-pkger
+packr2
 # GOOS=linux GOARCH=386 go build .
 go build .

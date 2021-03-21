@@ -84,7 +84,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
-		if k == "esc" || k == "ctrl+c" {
+		if k == "esc" || k == "ctrl+c" || k == "ctrl+q" {
+			fmt.Printf("%+v", m)
+
 			return m, tea.Quit
 		}
 	}
@@ -105,8 +107,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// If so, start over.
 			if s == "enter" && m.index == len(input) {
 				packageInputs = append(packageInputs, input)
-				// keyword.Reset()
-				// location.Reset()
 				m = initialModel()
 				return m, m.Init()
 			}

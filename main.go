@@ -9,21 +9,23 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/markbates/pkger"
 	"gopkg.in/yaml.v2"
 )
 
 var (
-	clear  map[string]func()
-	config SearchConfig
-	jobs   []extractedJob
+	clear       map[string]func()
+	openBrowser map[string]func()
+	config      SearchConfig
+	jobs        []extractedJob
 
 	urlSlice   []string
 	query      bool
@@ -281,19 +283,32 @@ func writeJobs(jobs []extractedJob) {
 func serveJobs() {
 	listener, err := net.Listen("tcp", ":0")
 	checkErr(err)
-	staticbox := packr.New("staticBox", "./site/static")
-	imagebox := packr.New("staticBox", "./site/static/images")
+
+	sitebox := packr.New("staticBox", "./site")
+	// staticbox := packr.New("staticBox", "./site/static")
+	// imagebox := packr.New("staticBox", "./site/static/images")
 
 	http.HandleFunc("/", serveTemplate)
+
 	http.Handle("/static/", // handle `/static` route
-		http.StripPrefix("/static", http.FileServer(http.Dir(staticbox.Path))),
+		http.StripPrefix("/static", http.FileServer(http.Dir(sitebox.Path)+"/static")),
 	)
+
+	// http.Handle("/static/", // handle `/static` route
+	// 	http.StripPrefix("/static", http.FileServer(http.Dir(staticbox.Path))),
+	// )
+
 	http.Handle("/static/images/", // handle `/static/images` route
-		http.StripPrefix("/static/images", http.FileServer(http.Dir(imagebox.Path))),
+		http.StripPrefix("/static/images", http.FileServer(http.Dir(sitebox.Path)+"/static/images")),
 	)
 
 	fmt.Printf("Serving at http://localhost:%d", listener.Addr().(*net.TCPAddr).Port)
+
+	url := "http://localhost:" + fmt.Sprintf("%d", listener.Addr().(*net.TCPAddr).Port)
+
 	log.Fatal(http.Serve(listener, nil))
+
+	openbrowser(url)
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
@@ -306,11 +321,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	// t, err := template.ParseFiles(layout)
 	// checkErr(err)
 
-	f, err := pkger.Open("./site/layout.html")
-	checkErr(err)
-	defer f.Close()
-
-	t, err := template.ParseFiles(f.Name())
+	t, err := template.ParseFiles("./site/layout.html")
 	checkErr(err)
 
 	err = t.Execute(w, jobs)
@@ -370,17 +381,8 @@ func checkType(t interface{}) {
 
 	default:
 		fmt.Printf("Underlying Type: %T\n", t)
-		fmt.Printf("Underlying Value: %v\n", t)
+		fmt.Printf("Underlying Value: %+v\n", t)
 	}
-
-	// for k, _ := range s {
-	// 	fmt.Printf("Underlying Type: %T\n  Underlying Value: %v\n", s[k], s[k])
-	// }
-
-	// fmt.Printf("Underlying Type: %T\n", jobs)
-	// fmt.Printf("Underlying Value: %v\n", jobs)
-
-	// fmt.Printf("%T %v\n", s, s)
 }
 
 func GetConfig() {
@@ -407,4 +409,41 @@ func GetConfig() {
 	} else {
 		fmt.Println("Schrodinger: file may or may not exist. See err for details.")
 	}
+}
+
+func openbrowser(url string) {
+
+	openBrowser = make(map[string]func()) //Initialize it
+	openBrowser["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+	openBrowser["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+
+	open, ok := openBrowser[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
+	//if we defined a clear func for that platform:
+	if ok {
+		open() //we execute it
+	} else {
+		panic("Your platform is unsupported! I can't clear terminal screen :(") //unsupported platform
+	}
+
+	// var err error
+
+	// switch runtime.GOOS {
+	// case "linux":
+	// 	err = exec.Command("xdg-open", url).Start()
+	// case "windows":
+	// 	err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	// case "darwin":
+	// 	err = exec.Command("open", url).Start()
+	// default:
+	// 	err = fmt.Errorf("unsupported platform")
+	// }
+	// checkErr(err)
 }
