@@ -74,23 +74,6 @@ func initialModel() model {
 	return model{0, keyword, location, blurredSubmitButton}
 }
 
-func clearModel() model {
-	keyword.SetValue("")
-	keyword.SetCursor(0)
-	keyword.Placeholder = "Keyword eg: Cart Pusher"
-	keyword.Focus()
-	keyword.Prompt = focusedPrompt
-	keyword.TextColor = focusedTextColor
-	keyword.CharLimit = 32
-
-	location.SetValue("")
-	location.Placeholder = "Location eg: Huntsville AL, Boulder CO"
-	location.Prompt = blurredPrompt
-	location.CharLimit = 64
-
-	return model{0, keyword, location, blurredSubmitButton}
-}
-
 func (m model) Init() tea.Cmd {
 	return textinput.Blink
 }
@@ -124,7 +107,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				packageInputs = append(packageInputs, input)
 				// keyword.Reset()
 				// location.Reset()
-				return initialModel(), nil
+				m = initialModel()
+				return m, m.Init()
 			}
 
 			// Cycle indexes
