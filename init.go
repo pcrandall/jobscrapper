@@ -1,45 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
-
-	"github.com/gobuffalo/packr/v2"
-	"gopkg.in/yaml.v2"
-)
-
-type extractedJob struct {
-	Id       string
-	Title    string
-	Location string
-	Salary   string
-	Summary  string
-	Date     string
-	FullDesc string
-}
-
-type SearchConfig struct {
-	Baseurl    string `yaml:"baseurl"`
-	Baselimit  string `yaml:"baselimit"`
-	Maxresults int    `yaml:"maxresults"`
-	Jobs       []struct {
-		Job      interface{} `yaml:"job"`
-		Keyword  string      `yaml:"keyword"`
-		Location []string    `yaml:"location"`
-	} `yaml:"jobs"`
-}
-
-var (
-	config  SearchConfig
-	jobs    []extractedJob
-	query   bool
-	logfile *os.File
+	"runtime"
 )
 
 func init() {
+	clear = make(map[string]func()) //Initialize it
+	clear["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+	clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
 
 	logpath := filepath.Join(".", "logs")
 	if _, err := os.Stat(logpath); os.IsNotExist(err) {
@@ -51,32 +31,21 @@ func init() {
 		os.MkdirAll(jobpath, os.ModePerm)
 	}
 	SetLog()
-	GetConfig()
 }
 
-func GetConfig() {
-	if _, err := os.Stat("./config/config.yml"); err == nil { // check if config file exists
-		yamlFile, err := ioutil.ReadFile("./config/config.yml")
-		if err != nil {
-			panic(err)
-		}
-		err = yaml.Unmarshal(yamlFile, &config)
-		if err != nil {
-			panic(err)
-		}
-	} else if os.IsNotExist(err) { // config file not included, use embedded config
-		yamlFile := packr.New("configBox", "./config")
+func checkErr(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
 
-		configFile, err := yamlFile.Find("config.yml")
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = yaml.Unmarshal(configFile, &config)
-		if err != nil {
-			panic(err)
-		}
+func CallClear() {
+	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
+	//if we defined a clear func for that platform:
+	if ok {
+		value() //we execute it
 	} else {
-		fmt.Println("Schrodinger: file may or may not exist. See err for details.")
+		panic("Your platform is unsupported! I can't clear terminal screen :(") //unsupported platform
 	}
 }
 
@@ -87,10 +56,4 @@ func SetLog() {
 	}
 	log.SetOutput(logfile)
 	defer logfile.Close()
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Fatalln(err)
-	}
 }

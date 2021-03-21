@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -16,30 +17,57 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/markbates/pkger"
+	"gopkg.in/yaml.v2"
+)
+
+var (
+	clear  map[string]func()
+	config SearchConfig
+	jobs   []extractedJob
+
+	urlSlice   []string
+	query      bool
+	configFile bool
+	logfile    *os.File
 )
 
 func main() {
-	CheckQuery()
-	var urls []string
+	// TODO maybe do something better
+	CheckQuery() // if query is false this doesn't return.
+
 	c := make(chan []extractedJob)
 
-	for _, job := range config.Jobs {
-		keyword := strings.TrimSpace(job.Keyword)
-		keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
-		if len(job.Location) == 0 {
-			fmt.Println("Finding", job.Keyword)
-			urls = append(urls, config.Baseurl+keyword+config.Baselimit)
+	if configFile {
+		for _, job := range config.Jobs {
+			keyword := strings.TrimSpace(job.Keyword)
+			keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
+			if len(job.Location) == 0 {
+				fmt.Println("Finding", job.Keyword)
+				urlSlice = append(urlSlice, config.Baseurl+keyword+config.Baselimit)
+			}
+			for _, location := range job.Location {
+				loc := strings.TrimSpace(location)
+				loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
+				urlSlice = append(urlSlice, config.Baseurl+keyword+"&"+loc+config.Baselimit)
+				fmt.Println("Finding", job.Keyword, "jobs in", location)
+			}
 		}
-		for _, location := range job.Location {
-			loc := strings.TrimSpace(location)
-			loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
-			urls = append(urls, config.Baseurl+keyword+"&"+loc+config.Baselimit)
-			fmt.Println("Finding", job.Keyword, "jobs in", location)
-		}
+	} else {
+		UserInput() // get user input for query
+		fmt.Println("THEY OUT NOW")
 	}
 
+	// CallClear() // clear screen print things.
+
+	for _, v := range urlSlice {
+		fmt.Println(v)
+	}
+
+	fmt.Println("SEE YA NEXT TIME")
+	os.Exit(0)
+
 	//TODO make channgel and go func here
-	for _, url := range urls {
+	for _, url := range urlSlice {
 		totalPages := getPages(url)
 		// fmt.Println("totalPages here:", totalPages)
 		pageLimit := config.Maxresults / 50
@@ -66,6 +94,7 @@ func main() {
 func CheckQuery() {
 	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
 	flag.Parse()
+	// No new query, use jobs.csv to build site.
 	if query == false {
 		lines, err := ReadCsv("./jobs/jobs.csv")
 		checkErr(err)
@@ -84,6 +113,15 @@ func CheckQuery() {
 		}
 		serveJobs()
 		os.Exit(0)
+	} else {
+		// New query on indeed, check for user input or use config file.
+		flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
+		flag.Parse()
+		if configFile == false {
+			UserInput()
+		} else {
+			GetConfig()
+		}
 	}
 }
 
@@ -343,4 +381,30 @@ func checkType(t interface{}) {
 	// fmt.Printf("Underlying Value: %v\n", jobs)
 
 	// fmt.Printf("%T %v\n", s, s)
+}
+
+func GetConfig() {
+	if _, err := os.Stat("./config/config.yml"); err == nil { // check if config file exists
+		yamlFile, err := ioutil.ReadFile("./config/config.yml")
+		if err != nil {
+			panic(err)
+		}
+		err = yaml.Unmarshal(yamlFile, &config)
+		if err != nil {
+			panic(err)
+		}
+	} else if os.IsNotExist(err) { // config file not included, use embedded config
+		yamlFile := packr.New("configBox", "./config")
+
+		configFile, err := yamlFile.Find("config.yml")
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = yaml.Unmarshal(configFile, &config)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		fmt.Println("Schrodinger: file may or may not exist. See err for details.")
+	}
 }
