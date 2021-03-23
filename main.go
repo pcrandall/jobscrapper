@@ -34,6 +34,13 @@ var (
 )
 
 func main() {
+
+	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logfile)
+	defer logfile.Close()
 	// TODO maybe do something better
 	CheckQuery() // if query is false this doesn't return.
 
@@ -95,6 +102,8 @@ func main() {
 
 func CheckQuery() {
 	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
+	// New query on indeed, check for user input or use config file.
+	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
 	flag.Parse()
 	// No new query, use jobs.csv to build site.
 	if query == false {
@@ -116,9 +125,6 @@ func CheckQuery() {
 		serveJobs()
 		os.Exit(0)
 	} else {
-		// New query on indeed, check for user input or use config file.
-		flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
-		flag.Parse()
 		if configFile == false {
 			UserInput()
 		} else {

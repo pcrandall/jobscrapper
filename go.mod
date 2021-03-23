@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.13.1
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/karrick/godirwalk v1.16.1 // indirect
+	github.com/markbates/pkger v0.17.1
 	github.com/muesli/termenv v0.8.0
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect

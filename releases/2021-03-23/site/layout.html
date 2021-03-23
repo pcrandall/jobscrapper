@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+  <head>
+    <title>Job Search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/static/tailwind.min.css" rel="stylesheet" />
+    <!--Regular Datatables CSS-->
+    <link href="./static/jquery.dataTables.min.css" rel="stylesheet" />
+    <!--Responsive Extension Datatables CSS-->
+    <link href="/static/responsive.dataTables.min.css" rel="stylesheet" />
+    <style>
+      /*Overrides for Tailwind CSS */
+      /*Form fields*/
+      .dataTables_wrapper select,
+      .dataTables_wrapper .dataTables_filter input {
+        color: #4a5568; /*text-gray-700*/
+        padding-left: 1rem; /*pl-4*/
+        padding-right: 1rem; /*pl-4*/
+        padding-top: 0.5rem; /*pl-2*/
+        padding-bottom: 0.5rem; /*pl-2*/
+        line-height: 1.25; /*leading-tight*/
+        border-width: 2px; /*border-2*/
+        border-radius: 0.25rem;
+        border-color: #edf2f7; /*border-gray-200*/
+        background-color: #edf2f7; /*bg-gray-200*/
+      }
+      /*Row Hover*/
+      table.dataTable.hover tbody tr:hover,
+      table.dataTable.display tbody tr:hover {
+        background-color: #ebf4ff; /*bg-indigo-100*/
+      }
+      /*Pagination Buttons*/
+      .dataTables_wrapper .dataTables_paginate .paginate_button {
+        font-weight: 700; /*font-bold*/
+        border-radius: 0.25rem; /*rounded*/
+        border: 1px solid transparent; /*border border-transparent*/
+      }
+      /*Pagination Buttons - Current selected */
+      .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        color: #fff !important; /*text-white*/
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+          0 1px 2px 0 rgba(0, 0, 0, 0.06); /*shadow*/
+        font-weight: 700; /*font-bold*/
+        border-radius: 0.25rem; /*rounded*/
+        background: #1d4ed8 !important; /*bg-blue-700*/
+        border: 1px solid transparent; /*border border-transparent*/
+      }
+      /*Pagination Buttons - Hover */
+      .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        color: #fff !important; /*text-white*/
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+          0 1px 2px 0 rgba(0, 0, 0, 0.06); /*shadow*/
+        font-weight: 700; /*font-bold*/
+        border-radius: 0.25rem; /*rounded*/
+        background: #1d4ed8 !important; /*bg-indigo-500*/
+        border: 1px solid transparent; /*border border-transparent*/
+      }
+      /*Add padding to bottom border */
+      table.dataTable.no-footer {
+        border-bottom: 1px solid #e2e8f0; /*border-b-1 border-gray-300*/
+        margin-top: 0.75em;
+        margin-bottom: 0.75em;
+      }
+
+      /*Change colour of responsive icon*/
+      table.dataTable.dtr-inline.collapsed > tbody > tr > td:first-child:before,
+      table.dataTable.dtr-inline.collapsed
+        > tbody
+        > tr
+        > th:first-child:before {
+        background-color: #667eea !important; /*bg-indigo-500*/
+      }
+      table.dataTable thead th {
+        border-bottom: none;
+        padding: 1em;
+      }
+
+      #jobTable {
+        display: none;
+      }
+    </style>
+    <style>
+      .modal {
+        transition: opacity 0.15s ease;
+      }
+      body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+      }
+      #modal-content {
+        height: 64vh;
+        overflow-y: auto;
+      }
+      .noselect {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+      }
+      #modal-content::-webkit-scrollbar {
+        width: 4px;
+        cursor: pointer;
+      }
+      #modal-content::-webkit-scrollbar-track {
+        background-color: rgba(229, 231, 235, var(--bg-opacity));
+        cursor: pointer;
+        /*background: red;*/
+      }
+      #modal-content::-webkit-scrollbar-thumb {
+        cursor: pointer;
+        background-color: #a0aec0;
+        /*outline: 1px solid slategrey;*/
+      }
+    </style>
+
+    <script type="text/javascript" src="/static/jquery-3.5.1.js"></script>
+    <!--Datatables -->
+    <script src="/static/jquery.dataTables.min.js"></script>
+    <script src="/static/dataTables.bootstrap5.min.js"></script>
+    <script>
+      const width =
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth;
+      const height =
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight;
+      let m = 0;
+      if (height > 1080) {
+        m = 78;
+      } else if (height > 1440){
+        m = 117;
+      } else {
+        m = 60;
+      }
+      let val = ($(window).height() * m) / 100;
+      $(document).ready(function () {
+        var table = $("#jobTable")
+          .DataTable({
+            responsive: true,
+            scrollY: val,
+            lengthMenu: [
+              [50, 25, 10, -1],
+              [50, 25, 10, "All"],
+            ],
+          })
+          .columns.adjust()
+          .responsive.recalc();
+      });
+
+      $(document).ready(function () {
+        $("#jobTable").on("click", "tr", function (e) {
+          if (e.target.cellIndex === 4) {
+            let val = $("td", this).eq(5).text(); // full description thats hidden
+            val = val.replace(/\n/g, "<br> <br>"); // replace line breaks with <br>
+            let link =
+              e.currentTarget.children[1].firstElementChild.attributes.href
+                .nodeValue;
+            link = '<a href="' + link + '">View Job</a>';
+            $("#jobButton").html(link);
+            toggleModal(val);
+          } else {
+            if (e.currentTarget.children[1]) {
+              console.log(
+                e.currentTarget.children[1].firstElementChild.attributes.href
+                  .nodeValue
+              );
+            }
+          }
+
+          $("#jobModal").modal("show");
+          $(".text-center").text(val);
+        });
+        $("#jobTable").fadeIn(500);
+      });
+    </script>
+  </head>
+  <body
+    class="bg-gray-100 text-gray-900 tracking-wider leading-normal bg-center mt-3"
+  >
+    <div class="p-8 mx-4 rounded shadow bg-white">
+      <table
+        id="jobTable"
+        class="stripe hover noselect"
+        style="width: 100%; padding-top: 1em; padding-bottom: 1em"
+      >
+        <thead class="bg-gray-100">
+          <tr>
+            <th data-priority="1">Date</th>
+            <th data-priority="5">Title</th>
+            <th data-priority="3">Location</th>
+            <th data-priority="2">Salary</th>
+            <th data-priority="4">Summary</th>
+            <th data-priority="6" style="display: none">FullDesc</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .}}
+          <tr>
+            <td>{{.Date}}</td>
+            <td>
+              <a href="{{.Id}}">{{.Title}}</a>
+            </td>
+            <td>{{.Location}}</td>
+            <td>{{.Salary}}</td>
+            <td style="cursor: pointer">{{.Summary}}</td>
+            <td style="display: none">{{.FullDesc}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    <!--Modal-->
+    <div
+      class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center"
+    >
+      <div
+        class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 modal-close cursor-pointer"
+      ></div>
+      <div
+        class="modal-container fixed w-5/6 h-5/6 z-50 bg-white px-4 shadow-lg"
+      >
+        <!-- Add margin if you want to see some of the overlay behind the modal-->
+        <div
+          class="modal-content py-4 text-left px-6 flex flex-col items-center mx-10 text-black z-50"
+        >
+          <!--Title-->
+          <div class="flex justify-between items-center pb-3">
+            <p class="text-2xl font-bold px-4">Job Description</p>
+            <div class="modal-close cursor-pointer z-50 absolute top-5 right-5">
+              <svg
+                class="fill-current text-black"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+              >
+                <path
+                  d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"
+                ></path>
+              </svg>
+            </div>
+          </div>
+          <!--Body-->
+          <p id="modal-content"></p>
+          <!--Footer-->
+          <div class="flex justify-center pt-2">
+            <button
+              class="mt-4 px-4 bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-700 mr-2"
+              id="jobButton"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const overlay = document.querySelector(".modal-overlay");
+      overlay.addEventListener("click", toggleModal);
+
+      var closemodal = document.querySelectorAll(".modal-close");
+      for (var i = 0; i < closemodal.length; i++) {
+        closemodal[i].addEventListener("click", toggleModal);
+      }
+
+      document.onkeydown = function (evt) {
+        evt = evt || window.event;
+        var isEscape = false;
+        if ("key" in evt) {
+          isEscape = evt.key === "Escape" || evt.key === "Esc";
+        } else {
+          isEscape = evt.keyCode === 27;
+        }
+        if (isEscape && document.body.classList.contains("modal-active")) {
+          toggleModal();
+        }
+      };
+
+      function toggleModal(val) {
+        const body = document.querySelector("body");
+        const modal = document.querySelector(".modal");
+        document.getElementById("modal-content").innerHTML = val;
+        modal.classList.toggle("opacity-0");
+        modal.classList.toggle("pointer-events-none");
+        body.classList.toggle("modal-active");
+      }
+    </script>
+  </body>
+</html>

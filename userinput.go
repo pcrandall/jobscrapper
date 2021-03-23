@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -81,13 +82,16 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
+	log.Printf("%+v", msg)
+
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
 		if k == "esc" || k == "ctrl+c" || k == "ctrl+q" {
-			fmt.Printf("%+v", m)
-
-			return m, tea.Quit
+			// fmt.Printf("model: %+v\n\n", m)
+			fmt.Printf("msg here: %+v\n\n", msg)
+			return m, tea.Batch(tea.Quit)
+			// return m, tea.Quit
 		}
 	}
 
