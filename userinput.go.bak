@@ -16,6 +16,13 @@ import (
 
 const focusedTextColor = "205"
 
+type model struct {
+	index         int
+	keywordInput  textinput.Model
+	locationInput textinput.Model
+	submitButton  string
+}
+
 var (
 	color               = te.ColorProfile().Color
 	focusedPrompt       = te.String("> ").Foreground(color("205")).String()
@@ -111,8 +118,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// If so, start over.
 			if s == "enter" && m.index == len(input) {
 				packageInputs = append(packageInputs, input)
+
 				m = initialModel()
-				return m, m.Init()
+				return m, nil
 			}
 
 			// Cycle indexes

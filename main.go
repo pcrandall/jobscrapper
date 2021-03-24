@@ -18,8 +18,30 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
+	"github.com/pcrandall/jobScrapper/input"
 	"gopkg.in/yaml.v2"
 )
+
+type extractedJob struct {
+	Id       string
+	Title    string
+	Location string
+	Salary   string
+	Summary  string
+	Date     string
+	FullDesc string
+}
+
+type SearchConfig struct {
+	Baseurl    string `yaml:"baseurl"`
+	Baselimit  string `yaml:"baselimit"`
+	Maxresults int    `yaml:"maxresults"`
+	Jobs       []struct {
+		Job      interface{} `yaml:"job"`
+		Keyword  string      `yaml:"keyword"`
+		Location []string    `yaml:"location"`
+	} `yaml:"jobs"`
+}
 
 var (
 	clear       map[string]func()
@@ -30,10 +52,13 @@ var (
 	urlSlice   []string
 	query      bool
 	configFile bool
-	logfile    *os.File
 )
 
 func main() {
+
+	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
+	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
+	flag.Parse()
 
 	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -41,8 +66,11 @@ func main() {
 	}
 	log.SetOutput(logfile)
 	defer logfile.Close()
-	// TODO maybe do something better
-	CheckQuery() // if query is false this doesn't return.
+
+	// No new query, use jobs.csv to build site.
+	if !query {
+		buildFromJobs() // if query is false this doesn't return.
+	}
 
 	c := make(chan []extractedJob)
 
@@ -62,18 +90,16 @@ func main() {
 			}
 		}
 	} else {
-		UserInput() // get user input for query
-		fmt.Println("THEY OUT NOW")
+		urlSlice = input.UserInput(urlSlice) // get user input for query
 	}
 
-	// CallClear() // clear screen print things.
+	CallClear() // clear screen print things.
 
-	for _, v := range urlSlice {
-		fmt.Println(v)
-	}
+	// for _, v := range urlSlice {
+	// 	fmt.Println(v)
+	// }
 
-	fmt.Println("SEE YA NEXT TIME")
-	os.Exit(0)
+	// os.Exit(0)
 
 	//TODO make channgel and go func here
 	for _, url := range urlSlice {
@@ -100,37 +126,24 @@ func main() {
 	serveJobs()
 }
 
-func CheckQuery() {
-	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
-	// New query on indeed, check for user input or use config file.
-	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
-	flag.Parse()
-	// No new query, use jobs.csv to build site.
-	if query == false {
-		lines, err := ReadCsv("./jobs/jobs.csv")
-		checkErr(err)
-		// Loop through lines & turn into object
-		for _, line := range lines {
-			data := extractedJob{
-				Id:       line[0],
-				Title:    line[1],
-				Location: line[2],
-				Salary:   line[3],
-				Summary:  line[4],
-				Date:     line[5],
-				FullDesc: line[6],
-			}
-			jobs = append(jobs, data)
+func buildFromJobs() {
+	lines, err := ReadCsv("./jobs/jobs.csv")
+	checkErr(err)
+	// Loop through lines & turn into object
+	for _, line := range lines {
+		data := extractedJob{
+			Id:       line[0],
+			Title:    line[1],
+			Location: line[2],
+			Salary:   line[3],
+			Summary:  line[4],
+			Date:     line[5],
+			FullDesc: line[6],
 		}
-		serveJobs()
-		os.Exit(0)
-	} else {
-		if configFile == false {
-			UserInput()
-		} else {
-			GetConfig()
-		}
+		jobs = append(jobs, data)
 	}
+	serveJobs()
+	os.Exit(0)
 }
 
 func checkCode(res *http.Response) {
@@ -312,9 +325,9 @@ func serveJobs() {
 
 	url := "http://localhost:" + fmt.Sprintf("%d", listener.Addr().(*net.TCPAddr).Port)
 
-	log.Fatal(http.Serve(listener, nil))
-
 	openbrowser(url)
+
+	log.Fatal(http.Serve(listener, nil))
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
@@ -419,37 +432,41 @@ func GetConfig() {
 
 func openbrowser(url string) {
 
-	openBrowser = make(map[string]func()) //Initialize it
-	openBrowser["linux"] = func() {
-		cmd := exec.Command("clear") //Linux example, its tested
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
-	openBrowser["windows"] = func() {
-		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
+	//openBrowser["linux"] = func() {
+	//	cmd := exec.Command("xdg-open", url) //Linux example, its tested
+	//	cmd.Stdout = os.Stdout
+	//	cmd.Run()
+	//}
+	//openBrowser["windows"] = func() {
+	//	cmd := exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	//	cmd.Stdout = os.Stdout
+	//	cmd.Run()
+	//}
+	//openBrowser["darwin"] = func() {
+	//	cmd := exec.Command("open", url)
+	//	cmd.Stdout = os.Stdout
+	//	cmd.Run()
+	//}
 
-	open, ok := openBrowser[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
-	//if we defined a clear func for that platform:
-	if ok {
-		open() //we execute it
-	} else {
-		panic("Your platform is unsupported! I can't clear terminal screen :(") //unsupported platform
+	//open, ok := openBrowser[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
+	////if we defined a clear func for that platform:
+	//if ok {
+	//	open() //we execute it
+	//} else {
+	//	panic("Your platform is unsupported! I can't clear terminal screen :(") //unsupported platform
+	//}
+
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
 	}
-
-	// var err error
-
-	// switch runtime.GOOS {
-	// case "linux":
-	// 	err = exec.Command("xdg-open", url).Start()
-	// case "windows":
-	// 	err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	// case "darwin":
-	// 	err = exec.Command("open", url).Start()
-	// default:
-	// 	err = fmt.Errorf("unsupported platform")
-	// }
-	// checkErr(err)
+	checkErr(err)
 }
