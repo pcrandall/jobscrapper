@@ -30,7 +30,6 @@ func init() {
 	if _, err := os.Stat(jobpath); os.IsNotExist(err) {
 		os.MkdirAll(jobpath, os.ModePerm)
 	}
-	SetLog()
 }
 
 func checkErr(err error) {
@@ -47,13 +46,4 @@ func CallClear() {
 	} else {
 		panic("Your platform is unsupported! I can't clear terminal screen :(") //unsupported platform
 	}
-}
-
-func SetLog() {
-	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	log.SetOutput(logfile)
-	defer logfile.Close()
 }

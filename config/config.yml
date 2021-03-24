@@ -6,21 +6,22 @@ jobs:
 - job:
   keyword: controls engineer
   location:
-    - Boulder CO
-    - Carmel IN
-    - Olympia WA
-    - Bozeman ID
-    - Salt Lake City UT
-    - Port Townsend WA
-    - Bentonville AR
-    - Eugene OR
-    - Burlington VT
+      - Clarksville TN
+    # - Boulder CO
+    # - Carmel IN
+    # - Olympia WA
+    # - Bozeman ID
+    # - Salt Lake City UT
+    # - Port Townsend WA
+    # - Bentonville AR
+    # - Eugene OR
+    # - Burlington VT
 
-- job:
-  keyword: golang
+# - job:
+  # keyword: golang
 
-- job:
-  keyword: full stack developer
+# - job:
+  # keyword: full stack developer
 
-- job:
-  keyword: front-end developer
+# - job:
+  # keyword: front-end developer

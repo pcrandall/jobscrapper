@@ -52,20 +52,24 @@ var (
 	urlSlice   []string
 	query      bool
 	configFile bool
+
+	baseurl    = "https://www.indeed.com/jobs?"
+	baselimit  = "&limit=50"
+	maxresults = 100
+	pageLimit  int
 )
 
 func main() {
-
-	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
-	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
-	flag.Parse()
-
 	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
 	log.SetOutput(logfile)
 	defer logfile.Close()
+
+	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
+	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
+	flag.Parse()
 
 	// No new query, use jobs.csv to build site.
 	if !query {
@@ -75,46 +79,54 @@ func main() {
 	c := make(chan []extractedJob)
 
 	if configFile {
+		GetConfig()
 		for _, job := range config.Jobs {
 			keyword := strings.TrimSpace(job.Keyword)
 			keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
 			if len(job.Location) == 0 {
-				fmt.Println("Finding", job.Keyword)
 				urlSlice = append(urlSlice, config.Baseurl+keyword+config.Baselimit)
 			}
 			for _, location := range job.Location {
 				loc := strings.TrimSpace(location)
 				loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
 				urlSlice = append(urlSlice, config.Baseurl+keyword+"&"+loc+config.Baselimit)
-				fmt.Println("Finding", job.Keyword, "jobs in", location)
 			}
 		}
 	} else {
 		urlSlice = input.UserInput(urlSlice) // get user input for query
+		// UserInput()
 	}
 
-	CallClear() // clear screen print things.
+	// CallClear() // clear screen print things.
 
 	// for _, v := range urlSlice {
 	// 	fmt.Println(v)
 	// }
 
 	// os.Exit(0)
+	// if !configFile {
+	// 	pageLimit = maxresults / 50
+	// } else {
+	// 	pageLimit = config.Maxresults / 50
+	// }
+	// fmt.Println("pageLimit here:", pageLimit)
 
 	//TODO make channgel and go func here
 	for _, url := range urlSlice {
+		fmt.Println("url : ", url)
 		totalPages := getPages(url)
+		fmt.Println("total pages: ", totalPages)
 		// fmt.Println("totalPages here:", totalPages)
-		pageLimit := config.Maxresults / 50
+		// if pageLimit > totalPages {
+		// 	pageLimit = totalPages
+		// }
+		// pageLimit = totalPages
 		// fmt.Println("pageLimit here:", pageLimit)
-		if pageLimit > totalPages {
-			pageLimit = totalPages
-		}
-		// fmt.Println("pageLimit here:", pageLimit)
-		for i := 0; i < pageLimit; i++ {
+		for i := 0; i < totalPages; i++ {
+			fmt.Println(url, i, c)
 			go getPage(url, i, c)
 		}
-		for i := 0; i < pageLimit; i++ {
+		for i := 0; i < totalPages; i++ {
 			extractedJobs := <-c
 			jobs = append(jobs, extractedJobs...)
 		}
@@ -148,7 +160,7 @@ func buildFromJobs() {
 
 func checkCode(res *http.Response) {
 	if res.StatusCode != 200 {
-		log.Fatalln("Request failed with status:", res.StatusCode)
+		log.Println("Request failed with status:", res.StatusCode)
 	}
 }
 
@@ -180,6 +192,7 @@ func getPages(url string) int {
 	// doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
 	// 	fmt.Println("searchCountPages text here", s.Text())
 	// })
+	fmt.Println("pages here", pages)
 	return pages
 }
 
@@ -431,31 +444,6 @@ func GetConfig() {
 }
 
 func openbrowser(url string) {
-
-	//openBrowser["linux"] = func() {
-	//	cmd := exec.Command("xdg-open", url) //Linux example, its tested
-	//	cmd.Stdout = os.Stdout
-	//	cmd.Run()
-	//}
-	//openBrowser["windows"] = func() {
-	//	cmd := exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
-	//	cmd.Stdout = os.Stdout
-	//	cmd.Run()
-	//}
-	//openBrowser["darwin"] = func() {
-	//	cmd := exec.Command("open", url)
-	//	cmd.Stdout = os.Stdout
-	//	cmd.Run()
-	//}
-
-	//open, ok := openBrowser[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
-	////if we defined a clear func for that platform:
-	//if ok {
-	//	open() //we execute it
-	//} else {
-	//	panic("Your platform is unsupported! I can't clear terminal screen :(") //unsupported platform
-	//}
-
 	var err error
 
 	switch runtime.GOOS {
