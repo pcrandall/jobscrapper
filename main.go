@@ -18,7 +18,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/pcrandall/jobScrapper/input"
+	input "github.com/pcrandall/jobScrapper/input"
 	"gopkg.in/yaml.v2"
 )
 
@@ -80,6 +80,11 @@ func main() {
 
 	if configFile {
 		GetConfig()
+
+		baseurl = config.Baseurl
+		baselimit = config.Baselimit
+		maxresults = config.Maxresults
+
 		for _, job := range config.Jobs {
 			keyword := strings.TrimSpace(job.Keyword)
 			keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
