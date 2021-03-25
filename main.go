@@ -55,7 +55,7 @@ var (
 
 	baseurl    = "https://www.indeed.com/jobs?"
 	baselimit  = "&limit=50"
-	maxresults = 100
+	maxresults = 200
 	pageLimit  int
 )
 
@@ -79,8 +79,8 @@ func main() {
 	c := make(chan []extractedJob)
 
 	if configFile {
-		GetConfig()
 
+		GetConfig() // get the config
 		baseurl = config.Baseurl
 		baselimit = config.Baselimit
 		maxresults = config.Maxresults
@@ -89,46 +89,41 @@ func main() {
 			keyword := strings.TrimSpace(job.Keyword)
 			keyword = "q=" + strings.ReplaceAll(keyword, " ", "+")
 			if len(job.Location) == 0 {
+				fmt.Println("Finding", job.Keyword)
 				urlSlice = append(urlSlice, config.Baseurl+keyword+config.Baselimit)
 			}
 			for _, location := range job.Location {
 				loc := strings.TrimSpace(location)
-				loc = "l=" + strings.ReplaceAll(loc, " ", "%2C+")
+				loc = "l=" + strings.ReplaceAll(loc, " ", "%2C")
 				urlSlice = append(urlSlice, config.Baseurl+keyword+"&"+loc+config.Baselimit)
+				fmt.Println("Finding", job.Keyword, "jobs in", location)
 			}
 		}
 	} else {
 		urlSlice = input.UserInput(urlSlice) // get user input for query
-		// UserInput()
 	}
 
 	// CallClear() // clear screen print things.
-
+	// fmt.Println("urlSlice", urlSlice)
 	// for _, v := range urlSlice {
 	// 	fmt.Println(v)
 	// }
 
-	// os.Exit(0)
-	// if !configFile {
-	// 	pageLimit = maxresults / 50
-	// } else {
-	// 	pageLimit = config.Maxresults / 50
-	// }
-	// fmt.Println("pageLimit here:", pageLimit)
+	if !configFile {
+		pageLimit = maxresults / 50
+	} else {
+		pageLimit = config.Maxresults / 50
+	}
 
 	//TODO make channgel and go func here
 	for _, url := range urlSlice {
-		fmt.Println("url : ", url)
 		totalPages := getPages(url)
-		fmt.Println("total pages: ", totalPages)
-		// fmt.Println("totalPages here:", totalPages)
-		// if pageLimit > totalPages {
-		// 	pageLimit = totalPages
-		// }
-		// pageLimit = totalPages
-		// fmt.Println("pageLimit here:", pageLimit)
+		// fmt.Println("totalPages: ", totalPages)
+		// fmt.Println("pageLimit: ", pageLimit)
+		if pageLimit > totalPages {
+			totalPages = pageLimit
+		}
 		for i := 0; i < totalPages; i++ {
-			fmt.Println(url, i, c)
 			go getPage(url, i, c)
 		}
 		for i := 0; i < totalPages; i++ {
