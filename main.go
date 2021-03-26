@@ -103,11 +103,7 @@ func main() {
 		urlSlice = input.UserInput(urlSlice) // get user input for query
 	}
 
-	// CallClear() // clear screen print things.
-	// fmt.Println("urlSlice", urlSlice)
-	// for _, v := range urlSlice {
-	// 	fmt.Println(v)
-	// }
+	CallClear() // clear screen print things.
 
 	if !configFile {
 		pageLimit = maxresults / 50
@@ -118,8 +114,6 @@ func main() {
 	//TODO make channgel and go func here
 	for _, url := range urlSlice {
 		totalPages := getPages(url)
-		// fmt.Println("totalPages: ", totalPages)
-		// fmt.Println("pageLimit: ", pageLimit)
 		if pageLimit < totalPages {
 			totalPages = pageLimit
 		}
@@ -181,12 +175,9 @@ func getPages(url string) int {
 
 	// TODO make this better
 	doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
-		// fmt.Println("searchCountPages text here", s.Text())
 		p := strings.Split(s.Text(), " ")
 		jobCount := strings.ReplaceAll(p[23], ",", "")
-		count, _ := strconv.Atoi(jobCount)
-		// fmt.Println("real pages here: ", count/50)
-		pages = count / 50
+		pages, _ = strconv.Atoi(jobCount)
 	})
 
 	return pages
@@ -254,37 +245,25 @@ func getFullDescription(url string, description chan<- string) {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
 
-	// d := doc.Find("#jobDescriptionText")
-	// checkType(d)
+	card := doc.Find("#jobDescriptionText")
 
-	des := doc.Find("#jobDescriptionText").Text()
-	description <- des
+	d := ""
+	card.Contents().Each(func(i int, s *goquery.Selection) {
+		d += s.Find("p").Text() + "\n\n"
+		// str += s.Find("b").Text() + "\n\n" // these need to be bold
+		// TODO add bullet points
+		d += s.Find("li").Text() + "\n\n"
+	})
 
-	// card := doc.Find("#jobDescriptionText").Text()
-	// // fmt.Println("Card HERE: ", card)
-	// // fmt.Printf("%+v\n", card)
-	// // d := cleanString(doc.Find(".jobsearch-JobDescriptionText").Text())
-	// d := cleanString(card)
-
-	// d := doc.Find("#jobDescriptionText")
-
-	// d.Contents().Each(func(i int, s *goquery.Selection) {
-	// 	// if goquery.NodeName(s) == "#text" {
-	// 	// 	fmt.Println(s.Text())
-	// 	// }
-	// 	fmt.Println(s)
-	// })
-	// checkType(d)
-
-	// des := doc.Find("#jobDescriptionText").Text()
+	description <- d
 }
 
 func RemoveDuplicates(jobs []extractedJob) {
 	found := make(map[string]bool)
 	j := 0
 	for i, x := range jobs {
-		if !found[x.Summary] {
-			found[x.Summary] = true
+		if !found[x.Id] {
+			found[x.Id] = true
 			(jobs)[j] = (jobs)[i]
 			j++
 		}
