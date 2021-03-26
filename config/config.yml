@@ -6,8 +6,8 @@ jobs:
 - job:
   keyword: controls engineer
   location:
-      - Clarksville TN
-    # - Boulder CO
+      # - Clarksville TN
+    - Boulder CO
     # - Carmel IN
     # - Olympia WA
     # - Bozeman ID

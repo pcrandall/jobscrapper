@@ -183,7 +183,7 @@ func updateInputs(msg tea.Msg, m model) (model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := "\nSubmit to submit query.\n\nPress Ctrl+c or ESC to search on Indeed!\n\n"
+	s := "\nSubmit to add query.\n\nPress Ctrl+c or ESC when finished to search on Indeed!\n\n"
 
 	inputs := []string{
 		m.keywordInput.View(),

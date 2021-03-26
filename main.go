@@ -120,7 +120,7 @@ func main() {
 		totalPages := getPages(url)
 		// fmt.Println("totalPages: ", totalPages)
 		// fmt.Println("pageLimit: ", pageLimit)
-		if pageLimit > totalPages {
+		if pageLimit < totalPages {
 			totalPages = pageLimit
 		}
 		for i := 0; i < totalPages; i++ {
@@ -168,11 +168,6 @@ func cleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
-// TODO make this better
-func cleanFullDesc(str string) string {
-	return strings.Join(strings.Fields(strings.TrimSpace(str)), "####")
-}
-
 func getPages(url string) int {
 	pages := 0
 	res, err := http.Get(url)
@@ -184,15 +179,16 @@ func getPages(url string) int {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
 
-	doc.Find(".pagination").Each(func(i int, s *goquery.Selection) {
-		pages = s.Find("a").Length()
+	// TODO make this better
+	doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
+		// fmt.Println("searchCountPages text here", s.Text())
+		p := strings.Split(s.Text(), " ")
+		jobCount := strings.ReplaceAll(p[23], ",", "")
+		count, _ := strconv.Atoi(jobCount)
+		// fmt.Println("real pages here: ", count/50)
+		pages = count / 50
 	})
 
-	// TODO make this better
-	// doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
-	// 	fmt.Println("searchCountPages text here", s.Text())
-	// })
-	fmt.Println("pages here", pages)
 	return pages
 }
 
@@ -317,18 +313,12 @@ func serveJobs() {
 	checkErr(err)
 
 	sitebox := packr.New("staticBox", "./site")
-	// staticbox := packr.New("staticBox", "./site/static")
-	// imagebox := packr.New("staticBox", "./site/static/images")
 
 	http.HandleFunc("/", serveTemplate)
 
 	http.Handle("/static/", // handle `/static` route
 		http.StripPrefix("/static", http.FileServer(http.Dir(sitebox.Path)+"/static")),
 	)
-
-	// http.Handle("/static/", // handle `/static` route
-	// 	http.StripPrefix("/static", http.FileServer(http.Dir(staticbox.Path))),
-	// )
 
 	http.Handle("/static/images/", // handle `/static/images` route
 		http.StripPrefix("/static/images", http.FileServer(http.Dir(sitebox.Path)+"/static/images")),
@@ -340,19 +330,10 @@ func serveJobs() {
 
 	openbrowser(url)
 
-	log.Fatal(http.Serve(listener, nil))
+	log.Println(http.Serve(listener, nil))
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
-
-	// sitebox := packr.New("layoutbox", "./site")
-
-	// layout, err := sitebox.FindString("./site/layout.html")
-	// checkErr(err)
-
-	// t, err := template.ParseFiles(layout)
-	// checkErr(err)
-
 	t, err := template.ParseFiles("./site/layout.html")
 	checkErr(err)
 
