@@ -1,29 +1,37 @@
 # Job scrapper
 
-Query indeed.com for jobs, returns results in csv format with links to each job posting.
+Query indeed.com for jobs, generates data table with job information and links to your local machine.
 
 Config file format
 
 
 ```yaml
 baseurl   : https://www.indeed.com/jobs?
+# Amount of jobs returned from each page.
 baselimit : &limit=50
+# Total amounts of jobs returned
+maxresults : 200
 
 jobs:
 - job:
-  keyword: q=JobKeyword1+JobKeyword2
+  keyword: JobKeyword1 JobKeyword2
+  # You can use City ST, zipcode, remote
+  # Location is optional
   location:
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
+    - City ST
+    - City ST
+    - City ST
+    - City ST
+    - City ST
+
 - job:
-  keyword: JOB
+  keyword: golang
   location:
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
-    - l=CITY%2C+ST
+    - remote
+
+- job:
+  keyword: full stack developer
+  location:
+    - Austin TX
+    - Denver CO
 ```
