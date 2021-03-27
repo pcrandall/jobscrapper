@@ -55,7 +55,7 @@ var (
 
 	baseurl    = "https://www.indeed.com/jobs?"
 	baselimit  = "&limit=50"
-	maxresults = 200
+	maxresults = 50
 	pageLimit  int
 )
 
@@ -245,15 +245,115 @@ func getFullDescription(url string, description chan<- string) {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
 
-	card := doc.Find("#jobDescriptionText")
+	// d, err := doc.Find("#jobDescriptionText").Children().Html()
+	// checkErr(err)
 
 	d := ""
+
+	// doc.Find("#jobDescriptionText").Children().Each(func(i int, s *goquery.Selection) {
+	// 	// fmt.Printf("nodeName() = %+v\n", goquery.NodeName(s))
+	// 	// fmt.Printf("s.Text() = %+v\n", s.Text())
+	// 	// html, _ := goquery.OuterHtml(s)
+	// 	// html = strings.ReplaceAll(html, "<br/>", "\n")
+	// 	// html = strings.ReplaceAll(html, "<li>", "\u2022    ")
+	// 	// html = strings.ReplaceAll(html, "<ul>", "\u2022    ")
+	// 	// html = strings.ReplaceAll(html, "</li>", "")
+	// 	// html = strings.ReplaceAll(html, "</ul>", "")
+
+	// 	// if html != "" {
+	// 	// 	d += html + "\n"
+	// 	// }
+
+	// 	switch goquery.NodeName(s) {
+	// 	case "br":
+	// 		// fmt.Printf("BR = %+v\n", goquery.NodeName(s))
+	// 		d += "\n"
+	// 	}
+	// 	if s.Text() != "" {
+	// 		switch goquery.NodeName(s) {
+
+	// 		case "b":
+	// 			d += s.Text()
+	// 		case "br":
+	// 			d += "\n"
+	// 		case "p":
+	// 			d += s.Text() + "\n\n"
+	// 		case "#text":
+	// 			d += "\n" + s.Text() + "\n"
+	// 		case "div":
+	// 			s.Children().Each(func(i int, s *goquery.Selection) {
+	// 				if goquery.NodeName(s) == "li" || goquery.NodeName(s) == "ul" {
+	// 				fmt.Printf(" = %+v\n", s)
+	// 					str := strings.ReplaceAll(s.Text(), "\n", "\n\u2022    ")
+	// 					d += str
+	// 				} else if goquery.NodeName(s) == "b" {
+	// 					fmt.Printf("goquery.NodeName(s) = %+v\t%+v\n", goquery.NodeName(s), s.Text())
+	// 					str := strings.ReplaceAll(s.Text(), "\n", "\n\n")
+	// 					d += "\n" + str
+	// 				} else {
+	// 					fmt.Printf("div = %+v\t%+v\n", goquery.NodeName(s), s.Text())
+	// 					str := strings.ReplaceAll(s.Text(), "\n", "\n\n")
+	// 					d += str
+	// 				}
+	// 			})
+
+	// 		}
+
+	// 		d = strings.ReplaceAll(d, "\n\n\n", "\n")
+	// 		d = strings.ReplaceAll(d, "\n\n\n\n", "\n")
+	// 		d = strings.ReplaceAll(d, "\n\n\n\n\n", "\n")
+	// 		// d = strings.ReplaceAll(d, "\n\u2022    \n\u2022", "\n\u2022\n")
+	// 	}
+	// 	// fmt.Printf("html = %+v\n", html)
+	// 	// childrenHtml = append(childrenHtml, html)
+	// })
+
+	card := doc.Find("#jobDescriptionText")
 	card.Contents().Each(func(i int, s *goquery.Selection) {
-		d += s.Find("p").Text() + "\n\n"
-		// str += s.Find("b").Text() + "\n\n" // these need to be bold
-		// TODO add bullet points
-		d += s.Find("li").Text() + "\n\n"
+		// d += s.Find("div").Text() + "\n\n"
+		// d += s.Find("p").Text() + "\n\n"
+		// d += "<b>" + s.Find("b").Text() + "</b>\n" // these need to be bold
+		// 	d += "\u2022" + s.Find("ul").Text() + "\n"
+		// 	d += "\u2022" + s.Find("li").Text() + "\n"
+		// d += s.Text() + "\n\n"
+
+		s.Contents().Each(func(i int, s *goquery.Selection) {
+			switch goquery.NodeName(s) {
+			case "br":
+				d = "\n" + d
+			}
+			if s.Text() != "" {
+				switch goquery.NodeName(s) {
+
+				case "b", "br":
+					d += "\n\n" + s.Text() + "\n"
+
+				case "p", "li", "div":
+					d += "\n\n" + s.Text() + "\n"
+
+				case "#text":
+					d += "\n\n" + s.Text() + "\n"
+
+				case "ul":
+					s.Each(func(i int, s *goquery.Selection) {
+						if goquery.NodeName(s) != "b" {
+							str := strings.ReplaceAll(s.Text(), "\n", "\n\u2022    ")
+							d += "\n\n" + str + "\n"
+						} else {
+							// fmt.Printf("goquery.NodeName(s) = %+v\t%+v", goquery.NodeName(s), s.Text())
+							d += "\n\n" + s.Text() + "\n"
+						}
+					})
+				}
+			}
+		})
 	})
+
+	d = strings.ReplaceAll(d, "\n\n\n", "\n")
+	d = strings.ReplaceAll(d, "\n\n\n\n", "\n")
+	d = strings.ReplaceAll(d, "\n\n\n\n\n", "\n")
+	d = strings.ReplaceAll(d, "\n\n\n\n\n\n", "\n")
+	d = strings.ReplaceAll(d, "\n\u2022    \n\u2022", "\n\u2022\n\n")
 
 	description <- d
 }

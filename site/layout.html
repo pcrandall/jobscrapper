@@ -156,7 +156,7 @@
         $("#jobTable").on("click", "tr", function (e) {
           if (e.target.cellIndex === 4) {
             let val = $("td", this).eq(5).text(); // full description thats hidden
-            val = val.replace(/\n/g, "<br> <br>"); // replace line breaks with <br>
+            val = val.replace(/\n/g, "<br>"); // replace line breaks with <br>
             let link =
               e.currentTarget.children[1].firstElementChild.attributes.href
                 .nodeValue;
