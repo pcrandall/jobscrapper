@@ -339,23 +339,25 @@ func serveJobs() {
 
 	sitebox := packr.New("staticBox", "./site")
 
-	// http.HandleFunc("/", serveTemplate)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", serveTemplate)
 
-		// FindString either loads file from disk during development or
-		// from bundled .go file in production
-		templateLayout, err := sitebox.FindString("layout.html")
-		checkErr(err)
+	//TODO Embed everything with packr
 
-		t := template.New("")
-		t.Parse(templateLayout)
-		err = t.ExecuteTemplate(w, "layout", jobs)
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	// FindString either loads file from disk during development or
+	// 	// from bundled .go file in production
+	// 	templateLayout, err := sitebox.FindString("layout.html")
+	// 	checkErr(err)
+	// 	t := template.New("")
+	// 	t.Parse(templateLayout)
+	// 	err = t.ExecuteTemplate(w, "layout", jobs)
 
-		// t, err := template.ParseFiles(sitebox.Path + "/layout.html")
-		// checkErr(err)
-		// err = t.Execute(w, jobs)
-		// checkErr(err)
-	})
+	// I think below here worked
+	// 	// t, err := template.ParseFiles(sitebox.Path + "/layout.html")
+	// 	// checkErr(err)
+	// 	// err = t.Execute(w, jobs)
+	// 	// checkErr(err)
+	// })
 
 	http.Handle("/static/", // handle `/static` route
 		http.StripPrefix("/static", http.FileServer(http.Dir(sitebox.Path)+"/static")),
@@ -371,13 +373,14 @@ func serveJobs() {
 
 	openbrowser(url)
 
+	log.Println(sitebox.List())
+
 	log.Println(http.Serve(listener, nil))
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("./site/layout.html")
 	checkErr(err)
-
 	err = t.Execute(w, jobs)
 	checkErr(err)
 }
