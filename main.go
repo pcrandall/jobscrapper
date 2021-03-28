@@ -15,12 +15,11 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
+	frames "github.com/pcrandall/jobScrapper/frames"
 	input "github.com/pcrandall/jobScrapper/input"
-	"github.com/theckman/yacspin"
 	"gopkg.in/yaml.v2"
 )
 
@@ -116,23 +115,27 @@ func main() {
 
 	//TODO make channgel and go func here
 
-	cfg := yacspin.Config{
-		Frequency:       200 * time.Millisecond,
-		CharSet:         yacspin.CharSets[54],
-		Suffix:          "Searching Indeed...",
-		SuffixAutoColon: false,
-		Message:         "",
-		StopCharacter:   "√",
-		StopMessage:     "Completed!",
-		StopColors:      []string{"fgGreen"},
-		Colors:          []string{"fgYellow"},
-	}
+	// cfg := yacspin.Config{
+	// 	Frequency:       200 * time.Millisecond,
+	// 	CharSet:         yacspin.CharSets[54],
+	// 	Suffix:          "Searching Indeed...",
+	// 	SuffixAutoColon: false,
+	// 	Message:         "",
+	// 	StopCharacter:   "√",
+	// 	StopMessage:     "Completed!",
+	// 	StopColors:      []string{"fgGreen"},
+	// 	Colors:          []string{"fgYellow"},
+	// }
 
-	spinner, err := yacspin.New(cfg) // handle the error
-	if err != nil {
-		panic(err)
-	}
-	spinner.Start() // Start the spinner
+	// spinner, err := yacspin.New(cfg) // handle the error
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// spinner.Start() // Start the spinner
+	f := make(chan bool, 1)
+
+	go frames.Start(f)
+
 	for _, url := range urlSlice {
 		totalPages := getPages(url)
 		if pageLimit < totalPages {
@@ -147,7 +150,9 @@ func main() {
 		}
 	}
 
-	spinner.Stop() // connected stop spinner
+	// f <- "stop" // Stop the frames
+	close(f)
+	<-f
 
 	CallClear() // clear screen print things.
 	RemoveDuplicates(jobs)
