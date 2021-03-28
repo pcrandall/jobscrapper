@@ -113,31 +113,12 @@ func main() {
 		pageLimit = config.Maxresults / 50
 	}
 
-	//TODO make channgel and go func here
+	f := make(chan bool) // loading frames channel
 
-	// cfg := yacspin.Config{
-	// 	Frequency:       200 * time.Millisecond,
-	// 	CharSet:         yacspin.CharSets[54],
-	// 	Suffix:          "Searching Indeed...",
-	// 	SuffixAutoColon: false,
-	// 	Message:         "",
-	// 	StopCharacter:   "√",
-	// 	StopMessage:     "Completed!",
-	// 	StopColors:      []string{"fgGreen"},
-	// 	Colors:          []string{"fgYellow"},
-	// }
-
-	// spinner, err := yacspin.New(cfg) // handle the error
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// spinner.Start() // Start the spinner
-	f := make(chan bool, 1)
-
-	go frames.Start(f)
+	go frames.Start(f) // initiate loading frames
 
 	for _, url := range urlSlice {
-		totalPages := getPages(url)
+		totalPages := getPages(url) //TODO make channel and go func here
 		if pageLimit < totalPages {
 			totalPages = pageLimit
 		}
@@ -150,9 +131,8 @@ func main() {
 		}
 	}
 
-	// f <- "stop" // Stop the frames
+	f <- true // send the stop signal to the go func and close channel
 	close(f)
-	<-f
 
 	CallClear() // clear screen print things.
 	RemoveDuplicates(jobs)

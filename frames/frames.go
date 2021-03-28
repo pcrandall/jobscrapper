@@ -40,7 +40,7 @@ var FrameMap = map[string]FrameType{
 	"rick":    Rick,
 }
 
-func Start(c chan bool) {
+func Start(c <-chan bool) { // recieve only channel
 
 	frames, ok := FrameMap["rick"]
 
@@ -51,10 +51,8 @@ func Start(c chan bool) {
 	i := 0
 
 	for {
-		// fmt.Printf("frames= %+v\n", frames)
 		select {
-
-		case <-c: // Stop frames
+		case <-c: // true sent on channel, stop frames
 			return
 
 		default:
