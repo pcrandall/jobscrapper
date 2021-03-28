@@ -20,8 +20,8 @@ var (
 	color               = te.ColorProfile().Color
 	focusedPrompt       = te.String("> ").Foreground(color("205")).String()
 	blurredPrompt       = "> "
-	focusedSubmitButton = "[ " + te.String("Submit").Foreground(color("205")).String() + " ]"
-	blurredSubmitButton = "[ " + te.String("Submit").Foreground(color("240")).String() + " ]"
+	focusedSubmitButton = "[ " + te.String("Add").Foreground(color("205")).String() + " ]"
+	blurredSubmitButton = "[ " + te.String("Add").Foreground(color("240")).String() + " ]"
 
 	keyword       textinput.Model
 	location      textinput.Model
@@ -69,14 +69,14 @@ func UserInput(u []string) []string {
 
 func initialModel() model {
 	keyword = textinput.NewModel()
-	keyword.Placeholder = "Keyword eg: Cart Pusher"
+	keyword.Placeholder = "Keyword eg: Astronaut"
 	keyword.Focus()
 	keyword.Prompt = focusedPrompt
 	keyword.TextColor = focusedTextColor
 	keyword.CharLimit = 32
 
 	location = textinput.NewModel()
-	location.Placeholder = "Location eg: Huntsville AL, Boulder CO"
+	location.Placeholder = "Location eg: Houston TX, Cleveland OH, Space"
 	location.Prompt = blurredPrompt
 	location.CharLimit = 64
 
@@ -183,7 +183,7 @@ func updateInputs(msg tea.Msg, m model) (model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := "Submit to add search items.\n\nMultiple searches supported.\n\nPress Ctrl+c or ESC when finished to search on Indeed!\n\n"
+	s := "Enter keywords and locations to search for jobs on Indeed.com\n\nMultiple locations for each keyword supported.\n\nPress Enter with the Add button highlighted to submit search item.\n\nPress Ctrl+c or ESC when finished with search criteria to search on Indeed!\n\n"
 
 	inputs := []string{
 		m.keywordInput.View(),

@@ -46,6 +46,7 @@ type SearchConfig struct {
 var (
 	clear       map[string]func()
 	openBrowser map[string]func()
+	resize      map[string]func()
 	config      SearchConfig
 	jobs        []extractedJob
 
@@ -60,6 +61,11 @@ var (
 )
 
 func main() {
+
+	if runtime.GOOS == "windows" { // resize terminal
+		ResizeWindow()
+	}
+
 	CallClear()
 	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -333,7 +339,23 @@ func serveJobs() {
 
 	sitebox := packr.New("staticBox", "./site")
 
-	http.HandleFunc("/", serveTemplate)
+	// http.HandleFunc("/", serveTemplate)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+		// FindString either loads file from disk during development or
+		// from bundled .go file in production
+		templateLayout, err := sitebox.FindString("layout.html")
+		checkErr(err)
+
+		t := template.New("")
+		t.Parse(templateLayout)
+		err = t.ExecuteTemplate(w, "layout", jobs)
+
+		// t, err := template.ParseFiles(sitebox.Path + "/layout.html")
+		// checkErr(err)
+		// err = t.Execute(w, jobs)
+		// checkErr(err)
+	})
 
 	http.Handle("/static/", // handle `/static` route
 		http.StripPrefix("/static", http.FileServer(http.Dir(sitebox.Path)+"/static")),

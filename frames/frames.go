@@ -42,7 +42,7 @@ var FrameMap = map[string]FrameType{
 
 func Start(c <-chan bool) { // recieve only channel
 
-	frames, ok := FrameMap["rick"]
+	frames, ok := FrameMap["nyan"]
 
 	if !ok {
 		fmt.Printf("frames= %+v\n", frames)
