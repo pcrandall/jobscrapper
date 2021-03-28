@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -73,9 +72,8 @@ func main() {
 	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
 	flag.Parse()
 
-	// No new query, use jobs.csv to build site.
 	if !query {
-		buildFromJobs() // if query is false this doesn't return.
+		buildFromJobs() // No new query, use jobs.csv to build site.
 	}
 
 	c := make(chan []extractedJob)
@@ -182,7 +180,7 @@ func getPages(url string) int {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
 
-	// TODO make this better
+	// TODO
 	doc.Find("#searchCountPages").Each(func(i int, s *goquery.Selection) {
 		p := strings.Split(s.Text(), " ")
 		jobCount := strings.ReplaceAll(p[23], ",", "")
@@ -220,8 +218,7 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 	mainChannel <- jobs // return jobs
 }
 
-// channel send only type extractJob
-func extractJob(card *goquery.Selection, c chan<- extractedJob) {
+func extractJob(card *goquery.Selection, c chan<- extractedJob) { // channel send only type extractJob
 	id, _ := card.Attr("data-jk")
 	id = "https://www.indeed.com/viewjob?jk=" + id
 	title := cleanString(card.Find(".title>a").Text())
@@ -232,6 +229,7 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 
 	fullDescription := make(chan string)
 	go getFullDescription(id, fullDescription)
+
 	fulldesc := <-fullDescription
 
 	c <- extractedJob{
@@ -247,6 +245,8 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 }
 
 func getFullDescription(url string, description chan<- string) {
+
+	fullDescription := ""
 	res, err := http.Get(url)
 	checkErr(err)
 	checkCode(res)
@@ -254,103 +254,34 @@ func getFullDescription(url string, description chan<- string) {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	checkErr(err)
 
-	// d, err := doc.Find("#jobDescriptionText").Children().Html()
-	// checkErr(err)
-
-	d := ""
-
-	// doc.Find("#jobDescriptionText").Children().Each(func(i int, s *goquery.Selection) {
-	// 	// fmt.Printf("nodeName() = %+v\n", goquery.NodeName(s))
-	// 	// fmt.Printf("s.Text() = %+v\n", s.Text())
-	// 	// html, _ := goquery.OuterHtml(s)
-	// 	// html = strings.ReplaceAll(html, "<br/>", "\n")
-	// 	// html = strings.ReplaceAll(html, "<li>", "\u2022    ")
-	// 	// html = strings.ReplaceAll(html, "<ul>", "\u2022    ")
-	// 	// html = strings.ReplaceAll(html, "</li>", "")
-	// 	// html = strings.ReplaceAll(html, "</ul>", "")
-
-	// 	// if html != "" {
-	// 	// 	d += html + "\n"
-	// 	// }
-
-	// 	switch goquery.NodeName(s) {
-	// 	case "br":
-	// 		// fmt.Printf("BR = %+v\n", goquery.NodeName(s))
-	// 		d += "\n"
-	// 	}
-	// 	if s.Text() != "" {
-	// 		switch goquery.NodeName(s) {
-
-	// 		case "b":
-	// 			d += s.Text()
-	// 		case "br":
-	// 			d += "\n"
-	// 		case "p":
-	// 			d += s.Text() + "\n\n"
-	// 		case "#text":
-	// 			d += "\n" + s.Text() + "\n"
-	// 		case "div":
-	// 			s.Children().Each(func(i int, s *goquery.Selection) {
-	// 				if goquery.NodeName(s) == "li" || goquery.NodeName(s) == "ul" {
-	// 				fmt.Printf(" = %+v\n", s)
-	// 					str := strings.ReplaceAll(s.Text(), "\n", "\n\u2022    ")
-	// 					d += str
-	// 				} else if goquery.NodeName(s) == "b" {
-	// 					fmt.Printf("goquery.NodeName(s) = %+v\t%+v\n", goquery.NodeName(s), s.Text())
-	// 					str := strings.ReplaceAll(s.Text(), "\n", "\n\n")
-	// 					d += "\n" + str
-	// 				} else {
-	// 					fmt.Printf("div = %+v\t%+v\n", goquery.NodeName(s), s.Text())
-	// 					str := strings.ReplaceAll(s.Text(), "\n", "\n\n")
-	// 					d += str
-	// 				}
-	// 			})
-
-	// 		}
-
-	// 		d = strings.ReplaceAll(d, "\n\n\n", "\n")
-	// 		d = strings.ReplaceAll(d, "\n\n\n\n", "\n")
-	// 		d = strings.ReplaceAll(d, "\n\n\n\n\n", "\n")
-	// 		// d = strings.ReplaceAll(d, "\n\u2022    \n\u2022", "\n\u2022\n")
-	// 	}
-	// 	// fmt.Printf("html = %+v\n", html)
-	// 	// childrenHtml = append(childrenHtml, html)
-	// })
-
 	card := doc.Find("#jobDescriptionText")
 	card.Contents().Each(func(i int, s *goquery.Selection) {
-		// d += s.Find("div").Text() + "\n\n"
-		// d += s.Find("p").Text() + "\n\n"
-		// d += "<b>" + s.Find("b").Text() + "</b>\n" // these need to be bold
-		// 	d += "\u2022" + s.Find("ul").Text() + "\n"
-		// 	d += "\u2022" + s.Find("li").Text() + "\n"
-		// d += s.Text() + "\n\n"
 
 		s.Contents().Each(func(i int, s *goquery.Selection) {
 			switch goquery.NodeName(s) {
 			case "br":
-				d = "\n" + d
+				fullDescription = "\n" + fullDescription
 			}
 			if s.Text() != "" {
 				switch goquery.NodeName(s) {
 
 				case "b", "br":
-					d += "\n\n" + s.Text() + "\n"
+					fullDescription += "\n\n" + s.Text() + "\n"
 
 				case "p", "li", "div":
-					d += "\n\n" + s.Text() + "\n"
+					fullDescription += "\n\n" + s.Text() + "\n"
 
 				case "#text":
-					d += "\n\n" + s.Text() + "\n"
+					fullDescription += "\n\n" + s.Text() + "\n"
 
 				case "ul":
 					s.Each(func(i int, s *goquery.Selection) {
 						if goquery.NodeName(s) != "b" {
 							str := strings.ReplaceAll(s.Text(), "\n", "\n\u2022    ")
-							d += "\n\n" + str + "\n"
+							fullDescription += "\n\n" + str + "\n"
 						} else {
 							// fmt.Printf("goquery.NodeName(s) = %+v\t%+v", goquery.NodeName(s), s.Text())
-							d += "\n\n" + s.Text() + "\n"
+							fullDescription += "\n\n" + s.Text() + "\n"
 						}
 					})
 				}
@@ -358,13 +289,13 @@ func getFullDescription(url string, description chan<- string) {
 		})
 	})
 
-	d = strings.ReplaceAll(d, "\n\n\n", "\n")
-	d = strings.ReplaceAll(d, "\n\n\n\n", "\n")
-	d = strings.ReplaceAll(d, "\n\n\n\n\n", "\n")
-	d = strings.ReplaceAll(d, "\n\n\n\n\n\n", "\n")
-	d = strings.ReplaceAll(d, "\n\u2022    \n\u2022", "\n\u2022\n\n")
+	fullDescription = strings.ReplaceAll(fullDescription, "\n\n\n", "\n")
+	fullDescription = strings.ReplaceAll(fullDescription, "\n\n\n\n", "\n")
+	fullDescription = strings.ReplaceAll(fullDescription, "\n\n\n\n\n", "\n")
+	fullDescription = strings.ReplaceAll(fullDescription, "\n\n\n\n\n\n", "\n")
+	fullDescription = strings.ReplaceAll(fullDescription, "\n\u2022    \n\u2022", "\n\u2022\n\n")
 
-	description <- d
+	description <- fullDescription
 }
 
 func RemoveDuplicates(jobs []extractedJob) {
@@ -444,46 +375,6 @@ func ReadCsv(filename string) ([][]string, error) {
 		return [][]string{}, err
 	}
 	return lines, nil
-}
-
-func checkType(t interface{}) {
-
-	switch reflect.TypeOf(t).Kind() {
-
-	case reflect.Slice:
-		s := reflect.ValueOf(t)
-		for i := 0; i < s.Len(); i++ {
-			fmt.Println(s.Index(i))
-		}
-
-	case reflect.Array:
-		s := reflect.ValueOf(t)
-		for i := 0; i < s.Len(); i++ {
-			fmt.Println(s.Index(i))
-		}
-
-	case reflect.Chan:
-		s := reflect.ValueOf(t)
-		for i := 0; i < s.Len(); i++ {
-			fmt.Println(s.Index(i))
-		}
-
-	case reflect.Func:
-		s := reflect.ValueOf(t)
-		for i := 0; i < s.Len(); i++ {
-			fmt.Println(s.Index(i))
-		}
-
-	case reflect.Map:
-		s := reflect.ValueOf(t)
-		for i := 0; i < s.Len(); i++ {
-			fmt.Println(s.Index(i))
-		}
-
-	default:
-		fmt.Printf("Underlying Type: %T\n", t)
-		fmt.Printf("Underlying Value: %+v\n", t)
-	}
 }
 
 func GetConfig() {

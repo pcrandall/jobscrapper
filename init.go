@@ -10,6 +10,11 @@ import (
 
 func init() {
 	clear = make(map[string]func()) //Initialize it
+	clear["darwin"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
 	clear["linux"] = func() {
 		cmd := exec.Command("clear") //Linux example, its tested
 		cmd.Stdout = os.Stdout

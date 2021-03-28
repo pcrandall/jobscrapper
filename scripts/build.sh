@@ -15,5 +15,4 @@ packr2
 go build .
 cp -r config ${releaseDir}/
 cp -r site ${releaseDir}/
-cp jobScrapper ${releaseDir}/jobScrapper
-
+mv jobScrapper ${releaseDir}/jobScrapper
