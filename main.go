@@ -15,10 +15,12 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gobuffalo/packr/v2"
 	input "github.com/pcrandall/jobScrapper/input"
+	"github.com/theckman/yacspin"
 	"gopkg.in/yaml.v2"
 )
 
@@ -60,6 +62,7 @@ var (
 )
 
 func main() {
+	CallClear()
 	logfile, err := os.OpenFile("./logs/logfile.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
@@ -67,7 +70,7 @@ func main() {
 	log.SetOutput(logfile)
 	defer logfile.Close()
 
-	flag.BoolVar(&query, "q", false, "query indeed.com, if false build site from ./sites/jobs.csv -q=true")
+	flag.BoolVar(&query, "q", true, "query indeed.com, if false build site from ./sites/jobs.csv -q=false")
 	flag.BoolVar(&configFile, "c", false, "use config file for query parameters ./config/config.yml -c=true")
 	flag.Parse()
 
@@ -112,6 +115,24 @@ func main() {
 	}
 
 	//TODO make channgel and go func here
+
+	cfg := yacspin.Config{
+		Frequency:       200 * time.Millisecond,
+		CharSet:         yacspin.CharSets[54],
+		Suffix:          "Searching Indeed...",
+		SuffixAutoColon: false,
+		Message:         "",
+		StopCharacter:   "√",
+		StopMessage:     "Completed!",
+		StopColors:      []string{"fgGreen"},
+		Colors:          []string{"fgYellow"},
+	}
+
+	spinner, err := yacspin.New(cfg) // handle the error
+	if err != nil {
+		panic(err)
+	}
+	spinner.Start() // Start the spinner
 	for _, url := range urlSlice {
 		totalPages := getPages(url)
 		if pageLimit < totalPages {
@@ -126,6 +147,9 @@ func main() {
 		}
 	}
 
+	spinner.Stop() // connected stop spinner
+
+	CallClear() // clear screen print things.
 	RemoveDuplicates(jobs)
 	writeJobs(jobs)
 	fmt.Println("Finished! Extracted", len(jobs), "jobs!")
@@ -189,7 +213,7 @@ func getPage(url string, page int, mainChannel chan<- []extractedJob) {
 	c := make(chan extractedJob)
 	pageURL := url + "&start=" + strconv.Itoa(page*50)
 
-	fmt.Println("Requesting", pageURL)
+	// fmt.Println("Requesting", pageURL)
 	res, err := http.Get(pageURL)
 	checkErr(err)
 	checkCode(res)
