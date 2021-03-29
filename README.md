@@ -1,9 +1,20 @@
 # Job scrapper
 
-Query indeed.com for jobs, generates data table with job information and links to your local machine.
+Ascii animations are ported from [ascii-live](https://github.com/hugomd/ascii-live)
+
+User input from [bubble tea](https://github.com/charmbracelet/bubbletea)
+
+![demo](./assets/ezdemo.gif)
+
+## Datatable generated with jquery and tailwind css
+
+![table](./assets/datatable.jpg)
+
+## Extended job descriptions with links to job postings
+
+![extended](./assets/extended_description.jpg)
 
 Config file format
-
 
 ```yaml
 baseurl   : https://www.indeed.com/jobs?
@@ -35,3 +46,10 @@ jobs:
     - Austin TX
     - Denver CO
 ```
+
+## Todos
+
+- [ ] Fix full description formatting
+- [x] Config file support
+- [x] User Input
+- [x] Real nice Ascii animations
