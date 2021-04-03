@@ -4,7 +4,7 @@ Ascii animations are ported from [ascii-live](https://github.com/hugomd/ascii-li
 
 User input from [bubble tea](https://github.com/charmbracelet/bubbletea)
 
-![demo](./assets/ezdemo.gif)
+![demo](./assets/demo.gif)
 
 ## Datatable generated with jquery and tailwind css
 
