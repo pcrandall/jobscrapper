@@ -21,3 +21,4 @@ pkged.go
 jobs.csv
 logfile.txt
 releases
+dist

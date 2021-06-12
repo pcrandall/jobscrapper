@@ -13,6 +13,11 @@ endif
 	@go mod download
 .PHONY: install
 
+release:
+	@echo "==> releasing windows darwin and linux"
+	@${currentDir}/scripts/release.sh
+.PHONY: release
+
 run:
 	@echo "==> running job scrapper"
 	@${currentDir}/scripts/run.sh
